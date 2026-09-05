@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  static:
+    name: Host and repository checks
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+      - name: Run static gate
+        run: ./tools/validate.sh --static
+
+  firmware:
+    name: Firmware ${{ matrix.board }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - board: passport
+            target: esp32c3
+            merged: build/ci/passport/FoloToy-AI-Passport-full.bin
+          - board: note4
+            target: esp32s3
+            merged: build/ci/note4/vibe-usage-note4-black-white-full.bin
+    steps:
+      - name: Check out source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+      - name: Build and verify
+        uses: espressif/esp-idf-ci-action@9d38657f3d789ca759b2b37aaf5ceffbc42c4f0d
+        with:
+          esp_idf_version: v5.5.3
+          target: ${{ matrix.target }}
+          path: .
+          command: ./tools/build.sh ${{ matrix.board }} build/ci
+      - name: Enforce stack-frame budgets
+        run: python3 tools/check_stack_usage.py build/ci/${{ matrix.board }}
+      - name: Test Passport LVGL layout on host
+        if: matrix.board == 'passport'
+        run: VIBE_UI_BUILD_DIR="${RUNNER_TEMP}/vibe-ui-layout" ./tools/test-ui-layout.sh
+      - name: Upload verified image
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: firmware-${{ matrix.board }}
+          path: |
+            ${{ matrix.merged }}
+            build/ci/${{ matrix.board }}/flash-plan.json
+          if-no-files-found: error
+          retention-days: 14

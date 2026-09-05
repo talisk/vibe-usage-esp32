@@ -1,0 +1,45 @@
+name: Hardware validation result
+description: Submit a sanitized board test result
+title: "[Hardware]: "
+labels: [hardware]
+body:
+  - type: dropdown
+    id: board
+    attributes:
+      label: Exact board
+      options:
+        - FoloToy AI Passport
+        - ZECTRIX NOTE4 BLACK-WHITE 400x300
+    validations:
+      required: true
+  - type: input
+    id: revision
+    attributes:
+      label: Source revision and image SHA-256
+    validations:
+      required: true
+  - type: input
+    id: power
+    attributes:
+      label: Power source and hardware facts
+    validations:
+      required: true
+  - type: textarea
+    id: action
+    attributes:
+      label: Exact action and expected result
+    validations:
+      required: true
+  - type: textarea
+    id: observation
+    attributes:
+      label: Observed result and sanitized evidence
+    validations:
+      required: true
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Privacy check
+      options:
+        - label: I removed credentials, Wi-Fi passwords, personal Usage data, hostnames, and factory identity.
+          required: true

@@ -1,0 +1,36 @@
+{
+  "buckets": [
+    {
+      "source": "codex",
+      "model": "synthetic-model-a",
+      "project": "fixture-project",
+      "hostname": "fixture-host",
+      "bucketStart": "2026-09-04T16:30:00.000Z",
+      "inputTokens": 9007199254740000,
+      "outputTokens": 900,
+      "cachedInputTokens": 200,
+      "reasoningOutputTokens": 93,
+      "totalTokens": 9007199254740993
+    },
+    {
+      "source": "claude-code",
+      "model": "synthetic-model-b",
+      "project": "fixture-project",
+      "hostname": "fixture-host",
+      "bucketStart": "2026-09-05T08:00:00+08:00",
+      "inputTokens": 4,
+      "outputTokens": 2,
+      "cachedInputTokens": 8,
+      "reasoningOutputTokens": 1,
+      "totalTokens": 7
+    }
+  ],
+  "sessions": [
+    {
+      "ignored": {
+        "nested": [true, false, null, "syntax checked but not retained"]
+      }
+    }
+  ],
+  "hasAnyData": true
+}

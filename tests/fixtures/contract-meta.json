@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "observedAt": "2026-09-05",
+  "clientCommit": "34d50754e0504b4a33b87d1f7927d462f30cb98e",
+  "serviceOrigin": "https://vibecafe.ai",
+  "metricId": "API_TOTAL_V1",
+  "timezone": "Asia/Shanghai",
+  "dailyRange": {
+    "from": "localMidnight(D) as UTC ISO-8601",
+    "to": "localMidnight(nextCalendarDay(D)) minus 1 millisecond as UTC ISO-8601",
+    "toIsExclusive": false,
+    "daysOneUsedByFirmware": false
+  },
+  "observations": {
+    "rootFields": ["buckets", "hasAnyData", "sessions"],
+    "paginationMetadataObserved": false,
+    "emptyRangeMayHaveHasAnyDataTrue": true,
+    "apiTotalMatchesInputOutputReasoning": true,
+    "apiTotalMatchesAppComputedTotalWhenCachedInputPresent": false
+  },
+  "privacy": "No credential, source, project, hostname, body, or real total retained"
+}

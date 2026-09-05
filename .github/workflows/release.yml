@@ -1,0 +1,62 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    name: Build verified release
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out tagged source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          fetch-depth: 0
+      - name: Run static gate
+        run: ./tools/validate.sh --static
+      - name: Parse version
+        id: version
+        shell: bash
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          if [[ ! "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Invalid release tag" >&2
+            exit 1
+          fi
+          echo "value=${version}" >> "${GITHUB_OUTPUT}"
+      - name: Build both targets and package release
+        uses: espressif/esp-idf-ci-action@9d38657f3d789ca759b2b37aaf5ceffbc42c4f0d
+        with:
+          esp_idf_version: v5.5.3
+          target: esp32c3
+          path: .
+          command: ./tools/release.sh ${{ steps.version.outputs.value }} dist
+      - name: Archive package
+        shell: bash
+        run: |
+          tar -C dist -czf "dist/v${{ steps.version.outputs.value }}.tar.gz" \
+            "v${{ steps.version.outputs.value }}"
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: vibe-usage-esp32-v${{ steps.version.outputs.value }}
+          path: dist/v${{ steps.version.outputs.value }}.tar.gz
+          if-no-files-found: error
+          retention-days: 30
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65
+        with:
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: |
+            dist/v${{ steps.version.outputs.value }}.tar.gz
+            dist/v${{ steps.version.outputs.value }}/SHA256SUMS
+            dist/v${{ steps.version.outputs.value }}/manifest.json
+            dist/v${{ steps.version.outputs.value }}/SBOM.spdx.json
+            dist/v${{ steps.version.outputs.value }}/passport/FoloToy-AI-Passport-full.bin
+            dist/v${{ steps.version.outputs.value }}/note4-black-white/vibe-usage-note4-black-white-full.bin

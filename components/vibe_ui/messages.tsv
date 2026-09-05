@@ -1,0 +1,214 @@
+Refresh now|立即刷新|立即重新整理|今すぐ更新
+Reconcile 7 days|补全七日数据|補齊七日資料|7日分を再取得
+Wi-Fi setup|网络设置|網路設定|Wi-Fi設定
+Timezone|时区|時區|タイムゾーン
+Display|显示|顯示|画面
+Display / full|显示 / 全刷|顯示 / 全刷|画面 / 全更新
+About|关于|關於|情報
+Reset Settings|重置设置|重設設定|設定をリセット
+Language|语言|語言|言語
+Booting|正在启动|正在啟動|起動中
+Boot|启动|啟動|起動
+Loading settings|加载设置|載入設定|設定を読込中
+Loading|加载中|載入中|読込中
+Wi-Fi required|请设置网络|請設定網路|Wi-Fi設定が必要
+Connecting Wi-Fi|正在连接网络|正在連線|Wi-Fi接続中
+Wi-Fi connecting|正在连接网络|正在連線|Wi-Fi接続中
+Synchronizing time|正在校时|正在校時|時刻を同期中
+Time sync|校时中|校時中|時刻同期
+Time required|需要校时|需要校時|時刻設定が必要
+Valid time required|请先校准时间|請先校準時間|時刻を設定してください
+Link Vibe account|关联 VibeCafe|連結 VibeCafe|VibeCafeと連携
+Account link|关联账号|連結帳號|アカウント連携
+Syncing usage|同步用量|同步用量|使用量を同期中
+Syncing|同步中|同步中|同期中
+Ready|就绪|就緒|準備完了
+Settings|设置|設定|設定
+Storage error|存储错误|儲存錯誤|保存エラー
+Stopping|正在停止|正在停止|停止中
+Resetting|正在重置|正在重設|リセット中
+Unknown|未知|未知|不明
+No usage|无用量|無用量|使用なし
+empty|无用量|無用量|使用なし
+Stale|待更新|待更新|要更新
+Auth required|授权失效|授權失效|要認証
+Link required|未关联|未連結|未連携
+None|无|無|なし
+Clock|时钟|時鐘|時計
+time|时间|時間|時刻
+Authorization|授权|授權|認証
+authentication|授权|授權|認証
+Network service|网络服务|網路服務|ネットサービス
+Response format|响应格式|回應格式|応答形式
+response schema|响应格式|回應格式|応答形式
+Storage|存储|儲存|保存
+Cancelled|已取消|已取消|取消済み
+Never|从未|從未|未同期
+Today|今日|今日|今日
+LAST 7 DAYS|最近七日|最近七日|過去7日間
+TOKENS|用量|用量|トークン
+VIBE / OVERVIEW|VIBE / 概览|VIBE / 概覽|VIBE / 概要
+VIBE / AGENTS|VIBE / 来源|VIBE / 來源|VIBE / ソース
+VIBE / STATUS|VIBE / 状态|VIBE / 狀態|VIBE / 状態
+VIBE NOTE / OVERVIEW|VIBE NOTE / 概览|VIBE NOTE / 概覽|VIBE NOTE / 概要
+VIBE NOTE / AGENTS|VIBE NOTE / 来源|VIBE NOTE / 來源|VIBE NOTE / ソース
+VIBE NOTE / STATUS|VIBE NOTE / 状态|VIBE NOTE / 狀態|VIBE NOTE / 状態
+No usage in this window|此时段暂无用量|此時段暫無用量|この期間の使用なし
+Waiting for first sync|等待首次同步|等待首次同步|初回同期を待機中
+Usage has not synced yet|用量尚未同步|用量尚未同步|使用量は未同期です
+7D coverage %u/7 / %s|七日覆盖 %u/7 / %s|七日涵蓋 %u/7 / %s|7日取得 %u/7 / %s
+Coverage %u/7  %s%s|覆盖 %u/7  %s%s|涵蓋 %u/7  %s%s|取得 %u/7  %s%s
+OK Today / 7D|OK 今日 / 七日|OK 今日 / 七日|OK 今日 / 7日
+UP prev|UP 上页|UP 上頁|UP 前へ
+DOWN next|DOWN 下页|DOWN 下頁|DOWN 次へ
+No agent usage available|暂无来源用量|暫無來源用量|ソース別の使用なし
+Small sources grouped as Other|小来源合并为其他|小來源合併為其他|少量のソースはその他へ
+Sources %u-%u of %u|来源 %u-%u / %u|來源 %u-%u / %u|ソース %u-%u / %u
+  +other|  +其他|  +其他|  +その他
+System|系统|系統|システム
+Account|账号|帳號|アカウント
+Last sync|上次同步|上次同步|最終同期
+Metric|统计口径|統計口徑|集計方式
+7 days|七日|七日|7日間
+Firmware|固件|韌體|ファーム
+Battery|电池|電池|バッテリー
+ / busy| / 忙碌| / 忙碌| / 処理中
+ (busy)| (忙碌)| (忙碌)| (処理中)
+Online|在线|線上|接続中
+Offline|离线|離線|未接続
+connected|已连接|已連線|接続済み
+saved|已保存|已儲存|保存済み
+not saved|未保存|未儲存|未保存
+Linked|已关联|已連結|連携済み
+Not linked|未关联|未連結|未連携
+Unavailable|不可用|無法使用|利用不可
+Hold OK menu|长按 OK 菜单|長按 OK 選單|OK長押し 設定
+OK / hold back|OK / 长按返回|OK / 長按返回|OK / 長押し戻る
+OK select / hold back|OK 选择 / 长按返回|OK 選擇 / 長按返回|OK 選択 / 長押し戻る
+Version %s|版本 %s|版本 %s|バージョン %s
+Repository|项目仓库|專案儲存庫|リポジトリ
+Author:|作者:|作者:|作者:
+OK back|OK 返回|OK 返回|OK 戻る
+This action cannot be undone on this device.|此操作无法在设备上撤销。|此操作無法在裝置上復原。|この操作は取り消せません。
+NO|否|否|いいえ
+YES|是|是|はい
+OK confirm|OK 确认|OK 確認|OK 確定
+QR unavailable|二维码不可用|QR 碼無法使用|QRコードなし
+QR does not fit|二维码过大|QR 碼過大|QRコードが大きすぎます
+Open setup AP / 10 min\nUse only while present|开放配网 / 十分钟\n请在设备旁使用|開放配網 / 十分鐘\n請在裝置旁使用|設定用AP / 10分間\n端末のそばで使用
+OK restart setup|OK 重新配网|OK 重新配網|OK 設定をやり直す
+Enter code / expires in %u min|输入代码 / %u 分钟后失效|輸入代碼 / %u 分鐘後失效|コード入力 / 残り%u分
+OK new code|OK 获取新代码|OK 取得新代碼|OK 新コード
+Preparing dashboard...|准备概览...|準備概覽...|概要を準備中...
+Preparing the dashboard...|准备概览...|準備概覽...|概要を準備中...
+Hold OK settings|长按 OK 设置|長按 OK 設定|OK長押し 設定
+Hold OK for settings|长按 OK 设置|長按 OK 設定|OK長押し 設定
+SETTING THE CLOCK|校准时间|校準時間|時刻の設定
+Synchronizing securely over NTP|正在通过 NTP 校时|正在透過 NTP 校時|NTPで時刻を同期中
+A valid clock is required|需要准确的设备时间|需要準確的裝置時間|正確な時刻が必要です
+Usage is never assigned to a guessed date.|不会将用量分配到推测的日期。|不會將用量分配到推測的日期。|推測した日付には集計しません。
+Cached data is not assigned to a guessed date|缓存不会按推测日期统计|快取不會按推測日期統計|推測した日付には集計しません
+OK retry|OK 重试|OK 重試|OK 再試行
+ACTION NEEDED|需要处理|需要處理|操作が必要です
+%s problem|%s 问题|%s 問題|%s の問題
+Problem: %s|问题: %s|問題: %s|問題: %s
+Last known good data is preserved.|已保留上次有效数据。|已保留上次有效資料。|前回の有効なデータを保持します。
+Last known good data is still available|上次有效数据仍可使用|上次有效資料仍可使用|前回の有効なデータを利用できます
+No trusted usage data is available yet.|暂无可信用量数据。|暫無可信用量資料。|有効な使用量データはありません。
+No trusted usage data is available yet|暂无可信用量数据|暫無可信用量資料|有効な使用量データはありません
+OK retry / hold menu|OK 重试 / 长按菜单|OK 重試 / 長按選單|OK 再試行 / 長押し設定
+OK retry / hold OK settings|OK 重试 / 长按设置|OK 重試 / 長按設定|OK 再試行 / 長押し設定
+1. Connect to|1. 连接热点|1. 連接熱點|1. APに接続
+2. Open|2. 打开网页|2. 開啟網頁|2. ページを開く
+3. Save Wi-Fi|3. 保存网络|3. 儲存網路|3. Wi-Fiを保存
+Portal closes|配网页面将在|配網頁面將在|設定画面は
+after 10 min|十分钟后关闭|十分鐘後關閉|10分後に終了
+Scan, then enter:|扫码后输入:|掃碼後輸入:|スキャンして入力:
+No password|不在此设备上|不在此裝置上|この端末では
+on this device.|输入账号密码。|輸入帳號密碼。|パスワード不要
+Expires in %u min|%u 分钟后失效|%u 分鐘後失效|残り%u分
+OK request new code|OK 获取新代码|OK 取得新代碼|OK 新コードを取得
+Saved data remains available after reboot|重启后保留已保存的数据|重新啟動後保留已儲存資料|再起動後も保存データを保持
+System       %s%s|系统       %s%s|系統       %s%s|システム    %s%s
+Wi-Fi       %s  saved=%s|网络       %s  保存=%s|網路       %s  儲存=%s|Wi-Fi      %s  保存=%s
+Account     %s|账号       %s|帳號       %s|アカウント  %s
+Timezone    %s|时区       %s|時區       %s|時間帯      %s
+Last sync   %s|上次同步   %s|上次同步   %s|最終同期    %s
+Metric      API total v1   coverage %u/7|口径 API total v1   覆盖 %u/7|口徑 API total v1   涵蓋 %u/7|集計 API total v1   取得 %u/7
+Data        Today:%s  7D:%s|数据 今日:%s  七日:%s|資料 今日:%s  七日:%s|使用量 今日:%s  7日:%s
+Firmware    %s   device %s|固件 %s   设备 %s|韌體 %s   裝置 %s|ファーム %s   端末 %s
+Battery     %u%%  %umV%s|电池 %u%%  %umV%s|電池 %u%%  %umV%s|電池 %u%%  %umV%s
+ charging| 充电中| 充電中| 充電中
+Unlink account?|解除关联？|解除連結？|連携を解除しますか？
+Reset settings?|重置设置？|重設設定？|設定をリセット？
+Unlink Vibe account?|解除 VibeCafe 关联？|解除 VibeCafe 連結？|VibeCafe連携を解除？
+Factory reset?|重置设置？|重設設定？|設定をリセット？
+Removes API credentials and cached usage.|移除授权凭据和用量缓存。|移除授權憑證和用量快取。|認証情報と使用量を削除します。
+Removes Wi-Fi, account, cache and settings.|移除网络、账号、缓存和设置。|移除網路、帳號、快取和設定。|Wi-Fi、連携、データと設定を削除。
+Cached usage and API credentials are removed.|将移除用量缓存和授权凭据。|將移除用量快取和授權憑證。|使用量と認証情報を削除します。
+Wi-Fi, account, settings and cache are removed.|将移除网络、账号、设置和缓存。|將移除網路、帳號、設定和快取。|Wi-Fi、連携、設定とデータを削除。
+Time sync failed|校时失败|校時失敗|時刻同期に失敗
+Requesting secure link code|正在获取安全关联码|正在取得安全連結碼|連携コードを取得中
+Could not request link code; retrying|关联码获取失败，正在重试|連結碼取得失敗，正在重試|コード取得に失敗、再試行中
+Scan QR and confirm the matching code|扫码并确认代码一致|掃碼並確認代碼一致|QRを読み取りコードを確認
+Link code expired; press OK to retry|代码已过期，按 OK 重试|代碼已過期，按 OK 重試|コード期限切れ、OKで再試行
+Link check failed; waiting to retry|关联检查失败，等待重试|連結檢查失敗，等待重試|連携確認に失敗、再試行待ち
+Server asked the device to slow down|服务端要求降低请求频率|伺服器要求降低請求頻率|サーバーの指示により待機中
+Linked; loading usage|已关联，正在加载用量|已連結，正在載入用量|連携済み、使用量を読込中
+Link request denied; press OK to retry|关联被拒绝，按 OK 重试|連結遭拒，按 OK 重試|連携が拒否されました、OKで再試行
+Code was already used; press OK for a new code|代码已使用，按 OK 获取新码|代碼已使用，按 OK 取得新碼|使用済みコード、OKで再取得
+Unexpected link response|关联响应异常|連結回應異常|連携の応答が不正です
+Server retry window active; keeping saved data|等待服务端重试，保留数据|等待伺服器重試，保留資料|再試行時刻までデータを保持
+Refreshing today|正在刷新今日|正在重新整理今日|今日の使用量を更新中
+Syncing today|正在同步今日|正在同步今日|今日の使用量を同期中
+Access expired; unlink could not be saved|授权失效，解绑保存失败|授權失效，解除連結儲存失敗|認証期限切れ、解除の保存失敗
+Vibe access expired; reconnect required|Vibe 授权失效，请重新关联|Vibe 授權失效，請重新連結|Vibe認証期限切れ、再連携が必要
+Sync failed; showing last good data|同步失败，显示上次有效数据|同步失敗，顯示上次有效資料|同期失敗、前回のデータを表示
+Today has no usage|今日暂无用量|今日暫無用量|今日の使用はありません
+Usage is up to date|用量已更新|用量已更新|使用量は最新です
+Today saved; could not queue 7D history|今日已保存，七日任务创建失败|今日已儲存，七日工作建立失敗|今日を保存、7日取得の予約に失敗
+Server retry window active; 7D sync paused|等待重试，七日同步已暂停|等待重試，七日同步已暫停|再試行待ち、7日同期を一時停止
+Filling seven-day history|正在补全七日历史|正在補齊七日歷史|7日分の履歴を取得中
+7D sync paused; completed days were kept|七日同步暂停，保留已完成日期|七日同步暫停，保留已完成日期|7日同期を停止、取得済み分は保持
+Seven-day history is complete|七日历史已完整|七日歷史已完整|7日分の取得が完了
+Seven-day history remains incomplete|七日历史尚未完整|七日歷史尚未完整|7日分の履歴は未完了
+Scanning saved Wi-Fi networks|正在扫描已保存网络|正在掃描已儲存網路|保存済みWi-Fiを検索中
+Connecting to Wi-Fi|正在连接网络|正在連線|Wi-Fiに接続中
+Wi-Fi connected|网络已连接|網路已連線|Wi-Fi接続済み
+Wi-Fi disconnected; retrying saved networks|网络断开，正在重连|網路中斷，正在重新連線|Wi-Fi切断、再接続中
+Connect a phone to the setup hotspot|请用手机连接配网热点|請用手機連接配網熱點|スマホを設定用APに接続
+Wi-Fi setup window expired|配网时限已到|配網時限已到|Wi-Fi設定の時間切れ
+Setup closed; connecting to Wi-Fi|配网已关闭，正在连接网络|配網已關閉，正在連線|設定を終了、Wi-Fiに接続中
+Wi-Fi credentials required|请先保存网络配置|請先儲存網路設定|Wi-Fi設定を保存してください
+Could not save timezone|无法保存时区|無法儲存時區|時間帯を保存できません
+Timezone changed; rebuilding daily cache|时区已更改，重建每日缓存|時區已變更，重建每日快取|時間帯を変更、日別データを再構築
+Seven-day reconciliation queued|七日补全任务已排队|七日補齊工作已排程|7日分の再取得を予約
+Could not queue seven-day reconciliation|无法安排七日补全任务|無法安排七日補齊工作|7日分の再取得を予約できません
+Opening Wi-Fi setup for 10 minutes|开启配网，十分钟后关闭|開啟配網，十分鐘後關閉|Wi-Fi設定を10分間開始
+Could not start Wi-Fi setup|无法启动配网|無法啟動配網|Wi-Fi設定を開始できません
+Requesting a new Vibe link|正在请求新的 Vibe 关联|正在要求新的 Vibe 連結|新しいVibe連携を要求中
+Could not persist account unlink|无法保存账号解绑|無法儲存帳號解除連結|連携解除を保存できません
+Vibe account unlinked|Vibe 账号已解绑|Vibe 帳號已解除連結|Vibe連携を解除しました
+Could not persist unlink|无法保存解绑状态|無法儲存解除連結狀態|解除状態を保存できません
+Resetting local Vibe and Wi-Fi settings|正在重置本地 Vibe 和网络设置|正在重設本機 Vibe 和網路設定|VibeとWi-Fi設定をリセット中
+Reset did not complete|重置未完成|重設未完成|リセットが完了しませんでした
+Connecting to saved Wi-Fi|正在连接已保存网络|正在連接已儲存網路|保存済みWi-Fiに接続中
+Could not start Wi-Fi station|无法启动网络连接|無法啟動網路連線|Wi-Fi接続を開始できません
+Press OK to retry Wi-Fi setup|按 OK 重新配网|按 OK 重新配網|OKでWi-Fi設定を再試行
+Stopping network before power off|关机前正在停止网络|關機前正在停止網路|電源を切る前に通信を停止中
+Network stopped|网络已停止|網路已停止|通信を停止しました
+Daily seven-day reconciliation queued|每日七日补全已排队|每日七日補齊已排程|日次の履歴取得を予約
+Could not queue daily reconciliation|无法安排每日补全|無法安排每日補齊|日次の再取得を予約できません
+Loading local state|正在加载本地状态|正在載入本機狀態|保存状態を読込中
+Language saved|语言已保存|語言已儲存|言語を保存しました
+Could not save language|无法保存语言|無法儲存語言|言語を保存できません
+Wi-Fi setup closed|配网已关闭|配網已關閉|Wi-Fi設定を終了
+Save failed|保存失败|儲存失敗|保存失敗
+UP toggle|UP 切换|UP 切換|UP 切替
+DOWN toggle|DOWN 切换|DOWN 切換|DOWN 切替
+SHUTTING DOWN|正在关机|正在關機|終了中
+Finishing storage and network work|正在完成存储和网络操作|正在完成儲存和網路操作|保存と通信を終了しています
+Please wait...|请稍候...|請稍候...|お待ちください...
+Scan to visit.|扫码访问。|掃碼瀏覽。|スキャンして開く。
+UP Repo|UP 仓库|UP 倉庫|UP リポジトリ
+UP Repo / DOWN X|UP 仓库 / DOWN X|UP 倉庫 / DOWN X|UP リポジトリ / DOWN X
