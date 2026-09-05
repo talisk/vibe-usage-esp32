@@ -182,6 +182,8 @@ record.
 After resolving both boards' dependencies with firmware builds, run
 `./tools/test-ui-layout.sh` for real LVGL font-width, bounded-label and both
 boards' QR pixel checks.
+For an isolated single-board checkout, use `./tools/test-ui-layout.sh passport`
+or `./tools/test-ui-layout.sh note4`; only that board's dependencies are required.
 The firmware validation gate includes this test; it does not replace screen
 photos from the physical boards.
 

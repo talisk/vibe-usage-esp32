@@ -140,6 +140,8 @@ app 大小与固件布局检查。必须上真机的项目继续在验收记录�
 
 首次构建两台设备、解析依赖后，可运行 `./tools/test-ui-layout.sh`，使用实际
 LVGL 字体检查文字宽度、标签高度，以及两台设备的二维码像素。固件 gate 已包含它，但它不替代实拍验证。
+单设备构建可运行 `./tools/test-ui-layout.sh passport` 或
+`./tools/test-ui-layout.sh note4`，只需要对应设备的依赖。
 
 0.1.1 修复本地日 API 查询边界，并重建用量缓存；保留已有 Wi-Fi 和登录授权。
 已有本地 Vibe CLI 配置时，可选择执行只读七日 API/固件核心对账：

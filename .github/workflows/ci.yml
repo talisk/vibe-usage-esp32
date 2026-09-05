@@ -47,9 +47,8 @@ jobs:
           command: ./tools/build.sh ${{ matrix.board }} build/ci
       - name: Enforce stack-frame budgets
         run: python3 tools/check_stack_usage.py build/ci/${{ matrix.board }}
-      - name: Test Passport LVGL layout on host
-        if: matrix.board == 'passport'
-        run: VIBE_UI_BUILD_DIR="${RUNNER_TEMP}/vibe-ui-layout" ./tools/test-ui-layout.sh
+      - name: Test board UI on host
+        run: VIBE_UI_BUILD_DIR="${RUNNER_TEMP}/vibe-ui-layout" ./tools/test-ui-layout.sh ${{ matrix.board }}
       - name: Upload verified image
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
