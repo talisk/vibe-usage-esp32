@@ -1,7 +1,7 @@
+#include "note_qr.h" // First: verify the device header without incidental host includes.
 #include <cassert>
 #include <cstdio>
 #include <cstdlib>
-#include "note_qr.h"
 #include "vibe_about.h"
 extern "C" {
 #include "qrcodegen.h"
