@@ -49,7 +49,7 @@ fi
     "${repo_root}/tests/host/test_config.c" -o "${test_dir}/test_config"
 "${test_dir}/test_config"
 
-for unit in vibe_i18n generated/vibe_messages generated/vibe_glyphs; do
+for unit in vibe_i18n generated/vibe_messages generated/vibe_glyphs generated/vibe_todo_glyphs; do
     "${cc}" "${flags[@]}" -I"${repo_root}/components/vibe_ui/include" \
         -c "${repo_root}/components/vibe_ui/${unit}.c" \
         -o "${test_dir}/${unit##*/}.o"
@@ -63,6 +63,6 @@ done
     -I"${repo_root}/firmware/zectrix/components/zectrix_canvas/font" \
     "${repo_root}/firmware/zectrix/components/zectrix_canvas/zectrix_canvas.cc" \
     "${repo_root}/tests/host/test_note_i18n.cc" \
-    "${test_dir}/vibe_i18n.o" "${test_dir}/vibe_messages.o" "${test_dir}/vibe_glyphs.o" \
+    "${test_dir}/vibe_i18n.o" "${test_dir}/vibe_messages.o" "${test_dir}/vibe_glyphs.o" "${test_dir}/vibe_todo_glyphs.o" \
     -o "${test_dir}/test_note_i18n"
 "${test_dir}/test_note_i18n"

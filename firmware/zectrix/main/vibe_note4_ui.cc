@@ -1,5 +1,6 @@
 #include "vibe_note4_ui.h"
 #include "note_qr.h"
+#include "note_text_clip.h"
 
 #include <algorithm>
 #include <cinttypes>
@@ -25,10 +26,10 @@ constexpr char kTag[] = "vibe_note4_ui";
 constexpr int kFooterY = 278;
 static vibe_language_t s_language = VIBE_LANG_EN;
 #define TR(text) vibe_tr(s_language, (text))
-constexpr uint8_t kSettingsCount = 9;
+constexpr uint8_t kSettingsCount = 11;
 constexpr const char* kSettings[kSettingsCount] = {
     "Refresh now", "Reconcile 7 days", "Wi-Fi setup", VIBE_ACCOUNT_NAME,
-    "Timezone", "Display / full", "About", "Reset Settings", "Language",
+    "Timezone", "Display / full", "Alert sound", "About", "Reset Settings", "Language", "LLM config",
 };
 
 struct QrDrawContext {
@@ -173,6 +174,7 @@ esp_err_t VibeNote4App::Run(const device_config_t& settings) {
         return error;
     }
 
+    board_.SetOkReleaseCallback(OkReleased, this);
     const bool reconfigure_wifi = HeldAtBoot(ZectrixButton::kOk, 2000);
     zectrix_epd_config_t epd_config = {};
     zectrix_epd_get_default_config(&epd_config);
@@ -290,9 +292,27 @@ bool VibeNote4App::HeldAtBoot(ZectrixButton button, uint32_t duration_ms) {
     return board_.IsButtonPressed(button);
 }
 
+void VibeNote4App::OkReleased(void* context) {
+    (void)context;
+    /* Called by the button task, independent of the e-paper refresh. */
+    app_controller_voice_stop();
+}
+
 void VibeNote4App::Loop() {
     while (true) {
         if (app_controller_get_view(&view_) == ESP_OK) {
+            /* Release callbacks stop recording even if its queued UI event was lost. */
+            if (voice_held_ && !board_.IsButtonPressed(ZectrixButton::kOk)) voice_held_ = false;
+            if (view_.todo_alert_id && (view_.todo_alert_id != shown_alert_id_ ||
+                                       view_.todo_alert_sequence != shown_alert_sequence_)) {
+                shown_alert_id_ = view_.todo_alert_id;
+                shown_alert_sequence_ = view_.todo_alert_sequence;
+                page_ = Page::kTodo;
+                todo_offset_ = 0;
+                for (uint8_t i = 0; i < view_.todo_count; ++i)
+                    if (view_.todos[i].id == view_.todo_alert_id) todo_offset_ = i;
+                rendered_revision_ = UINT32_MAX;
+            } else if (!view_.todo_alert_id) shown_alert_id_ = 0;
             const int64_t now = time(nullptr);
             if (next_power_sample_utc_ == 0 || now >= next_power_sample_utc_) {
                 power_ = board_.ReadPowerSnapshot();
@@ -300,8 +320,7 @@ void VibeNote4App::Loop() {
                 rendered_revision_ = UINT32_MAX;
             }
             if (view_.revision != rendered_revision_) {
-                Render(view_);
-                rendered_revision_ = view_.revision;
+                if (Render(view_)) rendered_revision_ = view_.revision;
             }
         }
 
@@ -318,12 +337,31 @@ void VibeNote4App::Loop() {
 
 void VibeNote4App::HandleButton(const ZectrixButtonEvent& event,
                                 const app_controller_view_t& view) {
+    if (event.action == ZectrixButtonAction::kRelease) {
+        if (event.button == ZectrixButton::kOk && voice_held_) {
+            voice_held_ = false;
+            app_controller_voice_stop();
+        }
+        return;
+    }
     if (event.button == ZectrixButton::kDown &&
         event.action == ZectrixButtonAction::kLongPress) {
         Shutdown();
         return;
     }
     if (event.action == ZectrixButtonAction::kLongPress) {
+        if (event.button == ZectrixButton::kOk && page_ == Page::kTodo) {
+            if (!view.todo_busy && !view.todo_recording && board_.IsButtonPressed(ZectrixButton::kOk)) {
+                voice_held_ = true;
+                app_controller_dispatch(APP_INTENT_TODO_VOICE_START);
+            }
+            return;
+        }
+        if (event.button == ZectrixButton::kOk && page_ == Page::kLlmConfig) {
+            app_controller_dispatch(APP_INTENT_LLM_CONFIG_CLOSE);
+            page_ = Page::kSettings;
+            return;
+        }
         if (event.button == ZectrixButton::kOk) {
             page_ = page_ == Page::kSettings ? Page::kOverview
                                               : Page::kSettings;
@@ -332,6 +370,28 @@ void VibeNote4App::HandleButton(const ZectrixButtonEvent& event,
         return;
     }
 
+    if (event.action != ZectrixButtonAction::kClick || voice_held_) return;
+    if (page_ == Page::kTodo) {
+        if (view.todo_busy || view.todo_recording) return;
+        if (event.button == ZectrixButton::kOk) {
+            if (view.todo_alert_id) app_controller_dispatch(APP_INTENT_TODO_ACK);
+            else page_ = Page::kOverview;
+        } else if (!vibe_list_step(&todo_offset_, view.todo_count, 4,
+                                   event.button == ZectrixButton::kDown)) {
+            page_ = event.button == ZectrixButton::kUp ? Page::kStatus : Page::kOverview;
+            todo_offset_ = 0;
+        }
+        return;
+    }
+    if (page_ == Page::kLlmConfig) {
+        if (view.wifi_provisioning && !view.wifi_connected) {
+            wifi_qr_step_ = !wifi_qr_step_;
+        } else if (event.button == ZectrixButton::kOk) {
+            app_controller_dispatch(APP_INTENT_LLM_CONFIG_CLOSE);
+            page_ = Page::kSettings;
+        }
+        return;
+    }
     if (page_ == Page::kConfirmUnlink || page_ == Page::kConfirmReset) {
         if (event.button == ZectrixButton::kUp ||
             event.button == ZectrixButton::kDown) {
@@ -378,15 +438,14 @@ void VibeNote4App::HandleButton(const ZectrixButtonEvent& event,
         visual == Visual::kTime || visual == Visual::kError) {
         if (event.button == ZectrixButton::kOk) {
             if (visual == Visual::kWifi) {
-                app_controller_dispatch(view.wifi_provisioning
-                                            ? APP_INTENT_RECONFIGURE_WIFI
-                                            : APP_INTENT_START_WIFI);
+                if (view.wifi_provisioning) wifi_qr_step_ = !wifi_qr_step_;
+                else app_controller_dispatch(APP_INTENT_START_WIFI);
             } else if (visual == Visual::kLink) {
                 app_controller_dispatch(APP_INTENT_RELINK);
             } else {
                 app_controller_dispatch(APP_INTENT_REFRESH);
             }
-        }
+        } else page_ = Page::kTodo;
         return;
     }
 
@@ -404,8 +463,8 @@ void VibeNote4App::HandleButton(const ZectrixButtonEvent& event,
     } else {
         int page = static_cast<int>(page_);
         page += event.button == ZectrixButton::kUp ? -1 : 1;
-        if (page < 0) page = 2;
-        if (page > 2) page = 0;
+        if (page < 0) page = 3;
+        if (page > 3) page = 0;
         page_ = static_cast<Page>(page);
         agent_offset_ = 0;
     }
@@ -423,6 +482,7 @@ void VibeNote4App::HandleSettingsClick(
             page_ = Page::kOverview;
             break;
         case 2:
+            wifi_qr_step_ = 0;
             app_controller_dispatch(APP_INTENT_RECONFIGURE_WIFI);
             page_ = Page::kOverview;
             break;
@@ -444,16 +504,24 @@ void VibeNote4App::HandleSettingsClick(
             page_ = Page::kOverview;
             break;
         case 6:
+            app_controller_dispatch(APP_INTENT_CYCLE_ALERT_VOLUME);
+            break;
+        case 7:
             about_view_ = VIBE_ABOUT_DETAILS;
             page_ = Page::kAbout;
             break;
-        case 7:
+        case 8:
             confirm_yes_ = false;
             page_ = Page::kConfirmReset;
             break;
-        case 8:
+        case 9:
             app_controller_dispatch(APP_INTENT_CYCLE_LANGUAGE);
             previous_valid_ = false;
+            break;
+        case 10:
+            page_ = Page::kLlmConfig;
+            wifi_qr_step_ = 0;
+            app_controller_dispatch(APP_INTENT_LLM_CONFIG);
             break;
         default:
             break;
@@ -487,6 +555,8 @@ void VibeNote4App::Shutdown() {
 VibeNote4App::Visual VibeNote4App::ResolveVisual(
     const app_controller_view_t& view) const {
     switch (page_) {
+        case Page::kTodo: return Visual::kTodo;
+        case Page::kLlmConfig: return Visual::kLlmConfig;
         case Page::kSettings: return Visual::kSettings;
         case Page::kAbout: return about_view_ == VIBE_ABOUT_DETAILS ? Visual::kAbout : Visual::kAboutQr;
         case Page::kConfirmUnlink: return Visual::kConfirmUnlink;
@@ -526,7 +596,7 @@ VibeNote4App::Visual VibeNote4App::ResolveVisual(
     }
 }
 
-void VibeNote4App::Render(const app_controller_view_t& view,
+bool VibeNote4App::Render(const app_controller_view_t& view,
                           bool force_full) {
     if (s_language != view.language) force_full = true;
     s_language = view.language;
@@ -538,6 +608,8 @@ void VibeNote4App::Render(const app_controller_view_t& view,
         case Visual::kOverview: RenderOverview(view); break;
         case Visual::kAgents: RenderAgents(view); break;
         case Visual::kStatus: RenderStatus(view); break;
+        case Visual::kTodo: RenderTodo(view); break;
+        case Visual::kLlmConfig: RenderLlmConfig(view); break;
         case Visual::kSettings: RenderSettings(view); break;
         case Visual::kAbout: RenderAbout(); break;
         case Visual::kAboutQr: RenderAbout(); break;
@@ -560,6 +632,7 @@ void VibeNote4App::Render(const app_controller_view_t& view,
     if (error != ESP_OK) {
         ESP_LOGE(kTag, "display refresh failed: %s", esp_err_to_name(error));
     }
+    return error == ESP_OK;
 }
 
 void VibeNote4App::RenderHeader(const app_controller_view_t& view,
@@ -707,8 +780,9 @@ void VibeNote4App::RenderStatus(const app_controller_view_t& view) {
 
 void VibeNote4App::RenderSettings(const app_controller_view_t& view) {
     RenderHeader(view, TR("SETTINGS"));
-    for (uint8_t index = 0; index < kSettingsCount; ++index) {
-        const int y = 40 + index * 25;
+    const uint8_t first = settings_index_ >= 9 ? settings_index_ - 8 : 0;
+    for (uint8_t index = first; index < kSettingsCount && index < first + 9; ++index) {
+        const int y = 40 + (index - first) * 25;
         if (index == settings_index_) {
             canvas_.FillRect(12, y - 3, 376, 22, true);
         }
@@ -719,14 +793,23 @@ void VibeNote4App::RenderSettings(const app_controller_view_t& view) {
         } else if (index == 3) {
             std::snprintf(item, sizeof(item), "%s: %s", TR(kSettings[index]),
                           view.has_auth ? TR("linked") : TR("not linked"));
-        } else if (index == 8) {
+        } else if (index == 6) {
+            if (view.alert_volume == 0)
+                std::snprintf(item, sizeof(item), "%s: %s", TR(kSettings[index]), TR("Muted"));
+            else
+                std::snprintf(item, sizeof(item), "%s: %u%%", TR(kSettings[index]), view.alert_volume);
+        } else if (index == 9) {
             std::snprintf(item, sizeof(item), "%s: %s", TR(kSettings[index]), vibe_language_name(view.language));
+        } else if (index == 10) {
+            std::snprintf(item, sizeof(item), "%s: %s", TR(kSettings[index]),
+                          view.llm_enabled ? TR("On") : TR("Off"));
         } else {
             std::snprintf(item, sizeof(item), "%s", TR(kSettings[index]));
         }
         canvas_.Text(20, y, item, 1, index == settings_index_);
     }
-    DrawFooter("UP", TR(std::strcmp(view.detail, "Could not save language") == 0
+    DrawFooter("UP", TR(std::strcmp(view.detail, "Could not save language") == 0 ||
+                           std::strcmp(view.detail, "Could not save alert volume") == 0
                            ? "Save failed" : "OK select / hold back"), "DOWN");
 }
 
@@ -769,21 +852,78 @@ void VibeNote4App::RenderConfirmation(const char* title,
 }
 
 void VibeNote4App::RenderWifi(const app_controller_view_t& view) {
-    canvas_.Text(14, 10, TR("WI-FI SETUP"), 2);
+    canvas_.Text(14, 10, TR(wifi_qr_step_ ? "2. Open setup" : "1. Join Wi-Fi"), 2);
     char payload[80] = {};
-    std::snprintf(payload, sizeof(payload), "WIFI:T:nopass;S:%s;;",
-                  view.ap_ssid);
-    DrawQr(payload, 14, 54, 210);
-    canvas_.Text(240, 62, TR("1. Connect to"), 1);
-    canvas_.Text(240, 86, view.ap_ssid[0] == '\0' ? "VibeNote-XXXX" : view.ap_ssid, 1);
-    canvas_.Text(240, 122, TR("2. Open"), 1);
-    canvas_.Text(240, 146, view.portal_url[0] == '\0'
-                                      ? "http://192.168.4.1"
-                                      : view.portal_url, 1);
-    canvas_.Text(240, 182, TR("3. Save Wi-Fi"), 1);
-    canvas_.Text(240, 214, TR("Portal closes"), 1);
+    std::snprintf(payload, sizeof(payload), "WIFI:T:nopass;S:%s;;", view.ap_ssid);
+    const char* url = view.portal_url[0] ? view.portal_url : "http://192.168.4.1";
+    DrawQr(wifi_qr_step_ ? url : payload, 14, 54, 210);
+    canvas_.Text(240, 62, TR(wifi_qr_step_ ? "2. Open" : "1. Connect to"), 1);
+    canvas_.Text(240, 94, view.ap_ssid[0] ? view.ap_ssid : "VibeNote-XXXX", 1);
+    canvas_.Text(240, 132, TR("3. Save Wi-Fi"), 1);
+    canvas_.Text(240, 172, TR(view.nfc_error == ESP_OK ? "NFC: tap to set up" : "NFC unavailable"), 1);
+    canvas_.Text(240, 212, TR("Portal closes"), 1);
     canvas_.Text(240, 236, TR("after 10 min"), 1);
-    DrawFooter("", TR("OK restart setup"), "");
+    DrawFooter("", TR("OK next QR / hold back"), "");
+}
+
+void VibeNote4App::RenderLlmConfig(const app_controller_view_t& view) {
+    if (!view.wifi_connected || !view.llm_portal_url[0]) {
+        if (view.wifi_provisioning) {
+            RenderWifi(view);
+            return;
+        }
+        RenderHeader(view, TR("LLM config"));
+        canvas_.TextCentered(100, TR(view.llm_config_open ?
+            (view.wifi_connected ? "Starting setup..." : "Connecting Wi-Fi") : "LLM config"), 2);
+        canvas_.TextCentered(174, TR(view.todo_status), 1);
+        DrawFooter("", TR("Hold OK back"), "");
+        return;
+    }
+    canvas_.TextCentered(10, TR("LLM config"), 2);
+    DrawQr(view.llm_portal_url, 100, 48, 200);
+    canvas_.TextCentered(248, TR("Same Wi-Fi: scan to configure"), 1);
+    DrawFooter("", TR("OK close"), "");
+}
+
+void VibeNote4App::RenderTodo(const app_controller_view_t& view) {
+    RenderHeader(view, TR("TODO List"));
+    const char* status = view.todo_recording ? "Listening / release OK" :
+                         view.todo_busy && view.todo_status[0] ? view.todo_status :
+                         view.todo_status[0] ? view.todo_status : "Hold OK to speak";
+    char clipped[128] = {};
+    note_clip_text(canvas_, TR(status), clipped, sizeof(clipped), 372);
+    canvas_.Text(14, 36, clipped, 1);
+    todo_offset_ = vibe_list_clamp(todo_offset_, view.todo_count, 4);
+    for (uint8_t row = 0; row < 4 && todo_offset_ + row < view.todo_count; ++row) {
+        const app_todo_item_view_t& item = view.todos[todo_offset_ + row];
+        const int y = 63 + row * 47;
+        const bool alert = item.id == view.todo_alert_id;
+        if (alert) canvas_.Rect(12, y - 2, 376, 44);
+        char marker[24] = {};
+        std::snprintf(marker, sizeof(marker), "%s %lu", item.completed ? "[x]" : "[ ]",
+                      static_cast<unsigned long>(item.id));
+        canvas_.Text(16, y, marker, 1);
+        clipped[0] = '\0';
+        note_clip_text(canvas_, item.title, clipped, sizeof(clipped), 306);
+        canvas_.Text(78, y, clipped, 1);
+        char due[24] = {}, reminder[80] = {};
+        if (item.due_utc > 0) {
+            FormatTime(item.due_utc, view.timezone, due, sizeof(due));
+            std::snprintf(reminder, sizeof(reminder), "%s%s%s", due,
+                          item.repeat_seconds ? " / " : "",
+                          item.repeat_seconds ? TR("Repeating") : "");
+        } else std::snprintf(reminder, sizeof(reminder), "%s", TR(item.completed ? "Completed" : "No reminder"));
+        canvas_.Text(78, y + 20, reminder, 1);
+    }
+    if (!view.todo_count) {
+        canvas_.TextCentered(118, TR("No tasks yet."), 1);
+        canvas_.TextCentered(150, TR("Hold OK to speak"), 1);
+    }
+    char count[40] = {};
+    std::snprintf(count, sizeof(count), "%u-%u / %u", view.todo_count ? todo_offset_ + 1 : 0,
+                  std::min<unsigned>(todo_offset_ + 4, view.todo_count), view.todo_count);
+    canvas_.TextCentered(246, count, 1);
+    DrawFooter("UP", TR(view.todo_alert_id ? "OK dismiss" : "OK back"), "DOWN");
 }
 
 void VibeNote4App::RenderLink(const app_controller_view_t& view) {
@@ -884,7 +1024,8 @@ bool VibeNote4App::DrawQr(const char* text, int x, int y, int extent) {
 
 esp_err_t VibeNote4App::CommitFrame(Visual visual, bool force_full) {
     const bool layout_changed = !previous_valid_ || visual != previous_visual_;
-    const bool qr_changed = qr_drawn_ && qr_hash_ != previous_qr_hash_;
+    /* Losing connectivity can remove a QR without leaving the LLM visual. */
+    const bool qr_changed = (qr_drawn_ ? qr_hash_ : 0) != previous_qr_hash_;
     note4_epd_refresh_plan_t plan = {};
     if (!note4_epd_plan_refresh(
             canvas_.data(), previous_.data(), canvas_.size(),

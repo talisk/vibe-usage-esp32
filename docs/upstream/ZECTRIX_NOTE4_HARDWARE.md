@@ -29,9 +29,24 @@ returned `zectrix_epd_config_t` before creating the driver.
 
 At boot, the product firmware asserts the battery latch before NVS or
 peripheral initialization. The display has a separate controlled rail and
-remains off until a refresh. The locked upstream audio/NFC source is retained
-for provenance, but P0 does not compile it; NFC power is held low and no UID is
-read or logged.
+remains off until a refresh. The original demo audio/NFC classes remain
+uncompiled, while the product's `components/board_services` now implements
+ES8311 microphone capture, local reminder sounds and configuration NDEF writes.
+It reuses the existing I2C0 bus and lock; no second I2C or ADC owner is created.
+
+Audio initializes when first requested, with 8 kHz mono PCM16 capture and a
+bounded local chime. GPIO46 enables the speaker only during playback; codec and
+I2S stop outside recording/playback. The shared audio/I2C rail is not lowered by
+the audio service because other board peripherals depend on its existing
+power contract.
+
+NFC writes only user blocks `0x01..0x37` through I2C address `0x55`; no UID is
+read or logged. It publishes WSC + URI records during provisioning and a safe
+fixed URI on exit or boot cleanup, clears stale user bytes, then verifies the
+write before powering down. Lowering GPIO21 alone does not erase NDEF, because
+phone RF can still read the tag's EEPROM. A cleanup failure remains an error.
+The full implementation contract, phone compatibility and device-test checklist
+are in [smart-todo-hardware.md](../smart-todo-hardware.md).
 
 Battery voltage is read through the board ADC path and displayed as both
 millivolts and an estimated percentage. The charging test combines charger

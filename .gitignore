@@ -20,3 +20,7 @@ sdkconfig.old
 /firmware/*/build*/
 /firmware/*/managed_components/
 /firmware/*/sdkconfig
+
+# Local experimental gateway state (prefer paths outside the repository)
+/services/codex_gateway/.venv/
+/services/codex_gateway/.gateway-token

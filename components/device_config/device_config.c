@@ -71,6 +71,16 @@ esp_err_t device_config_save_language(vibe_language_t language) {
     return error;
 }
 
+esp_err_t device_config_save_alert_volume(uint8_t volume) {
+    if (volume > 100) return ESP_ERR_INVALID_ARG;
+    nvs_handle_t handle = 0;
+    esp_err_t error = nvs_open("vibe_cfg", NVS_READWRITE, &handle);
+    if (error == ESP_OK) error = nvs_set_u8(handle, "alert_vol_v1", volume);
+    if (error == ESP_OK) error = nvs_commit(handle);
+    if (handle != 0) nvs_close(handle);
+    return error;
+}
+
 esp_err_t device_config_load_or_create(uint32_t default_refresh_seconds,
                                        device_config_t *config) {
     if (config == NULL || default_refresh_seconds < 60) {
@@ -79,6 +89,7 @@ esp_err_t device_config_load_or_create(uint32_t default_refresh_seconds,
     nvs_handle_t handle = 0;
     stored_config_t stored;
     uint8_t language = VIBE_LANG_EN;
+    uint8_t alert_volume = DEVICE_ALERT_VOLUME_DEFAULT;
     size_t size = sizeof(stored);
     esp_err_t error = nvs_open("vibe_cfg", NVS_READONLY, &handle);
     if (error == ESP_OK) {
@@ -88,6 +99,15 @@ esp_err_t device_config_load_or_create(uint32_t default_refresh_seconds,
             if (lang_error == ESP_ERR_NVS_NOT_FOUND || lang_error == ESP_ERR_NVS_TYPE_MISMATCH ||
                 language >= VIBE_LANG_COUNT) language = VIBE_LANG_EN;
             else if (lang_error != ESP_OK) error = lang_error;
+            if (error == ESP_OK) {
+                esp_err_t volume_error = nvs_get_u8(handle, "alert_vol_v1", &alert_volume);
+                if (volume_error == ESP_ERR_NVS_NOT_FOUND ||
+                    volume_error == ESP_ERR_NVS_TYPE_MISMATCH || alert_volume > 100) {
+                    alert_volume = DEVICE_ALERT_VOLUME_DEFAULT;
+                } else if (volume_error != ESP_OK) {
+                    error = volume_error;
+                }
+            }
         }
         nvs_close(handle);
     }
@@ -102,6 +122,7 @@ esp_err_t device_config_load_or_create(uint32_t default_refresh_seconds,
         config->refresh_seconds = stored.refresh_seconds;
         config->timezone = (vibe_timezone_t)stored.timezone;
         config->language = (vibe_language_t)language;
+        config->alert_volume = alert_volume;
         memcpy(config->device_id, stored.device_id, sizeof(config->device_id));
         memset(&stored, 0, sizeof(stored));
         return ESP_OK;
@@ -113,6 +134,7 @@ esp_err_t device_config_load_or_create(uint32_t default_refresh_seconds,
     config->config_revision = 1;
     config->refresh_seconds = default_refresh_seconds;
     config->timezone = VIBE_TZ_ASIA_SHANGHAI;
+    config->alert_volume = DEVICE_ALERT_VOLUME_DEFAULT;
     const uint16_t random_id = (uint16_t)esp_random();
     snprintf(config->device_id, sizeof(config->device_id), "%04X", random_id);
     return device_config_save(config);

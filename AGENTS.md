@@ -64,8 +64,9 @@ documents named below.
   invalidation.
 - A 401 first persists a higher-generation tombstone, invalidates current RAM
   use, and stops old-key work. A storage failure must remain visible.
-- Never introduce TLS verification bypasses, redirects, arbitrary API origins,
-  credential logging, or whole-NVS erase fallback.
+- Never introduce TLS verification bypasses, redirects, credential logging,
+  or whole-NVS erase fallback. Usage API origins remain fixed. Explicitly
+  configured LLM origins follow ADR 0002 and must never receive Usage keys.
 
 ## Context routing
 

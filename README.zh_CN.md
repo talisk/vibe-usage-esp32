@@ -165,3 +165,11 @@ python3 tools/probe_live_usage.py --config /path/to/existing/config.json
 贡献规范见 [CONTRIBUTING.md](CONTRIBUTING.md) 与 [AGENTS.md](AGENTS.md)。
 项目自有代码采用 [MIT License](LICENSE)；第三方许可见
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+
+## 智能 TODO（当前开发候选）
+
+两个硬件新增 TODO List：长按 OK 说话，松开提交，支持新增、完成、删除和
+相对/周期声音提醒。Settings → LLM 配置可扫码管理 Chat Completions 与
+ASR 接口。NOTE4 自动准备 NFC 配网记录；Passport 被动标签需要手机首次
+写入。完整操作、兼容性和验收边界见[用户指南](docs/smart-todo-user-guide.zh_CN.md)、
+[开发说明](docs/smart-todo-development.zh_CN.md)和[本次验收记录](docs/acceptance/2026-09-06-smart-todo.md)。

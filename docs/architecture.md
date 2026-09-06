@@ -32,7 +32,7 @@ do not perform HTTP or block on Wi-Fi.
 | `app_controller` | lifecycle, serialized side effects, deadlines, cancellation, retry/backoff | panel pixels or board power rails |
 | `wifi_adapter` | stable C boundary around station and portal behavior | Vibe credentials or Usage data |
 | `esp_wifi_connect` | up to ten saved networks, scan/selection, captive portal | account authorization |
-| `device_config` | timezone, refresh interval, random display identifier, config revision, language | auth or daily usage |
+| `device_config` | timezone, refresh interval, random display identifier, config revision, language, alert volume | auth or daily usage |
 | `vibe_ui` | four-language catalog, bounded UTF-8 decoding and font subsets | network, NVS, GPIO |
 | `firmware/ai-passport` | LVGL screens, BSP lock, buttons, backlight | shared protocol rules |
 | `firmware/zectrix` | 1-bpp canvas, EPD refresh, RTC, latch, buttons | shared protocol rules |
@@ -46,6 +46,11 @@ upgrading does not regenerate device IDs or invalidate usage/auth caches. An
 absent, invalid, or wrong-type language key falls back to English; other storage
 errors propagate. A failed save leaves the selected language unchanged and
 shows a Settings footer error. Note forces a full EPD refresh when language changes.
+
+Alert volume uses the independent `vibe_cfg/alert_vol_v1` byte. Settings cycles
+through mute, 25, 50, 75, and 100 percent; a successful non-muted change plays a
+preview chime. The default is 50 percent. The original `settings_v1` blob remains
+binary-compatible.
 
 Lifecycle and data freshness are intentionally independent. The lifecycle moves
 through configuration, Wi-Fi, time, link, synchronization, dashboard, settings,
@@ -118,7 +123,8 @@ NVS ownership is deliberately narrow:
 | `vibe_auth` | `auth_v1` | CRC-covered credential or higher-generation tombstone |
 | `vibe_cache` | `cache_a`, `cache_b` | alternating snapshots; highest valid sequence wins |
 | `vibe_meta` | `retry_v1`, `reset_v1` | persisted rate-limit deadline and reset journal |
-| `vibe_cfg` | `settings_v1` | product settings |
+| `vibe_cfg` | `settings_v1`, `language_v1`, `alert_vol_v1` | product settings and independent UI preferences |
+| `vibe_llm` | `settings_v1`, `asr_lang_v1` | voice endpoints, models, credentials, upload mode, and ASR language |
 | `wifi` | vendored component keys | saved Wi-Fi networks |
 
 A 401 first persists a higher-generation auth tombstone, then hides current RAM
@@ -155,3 +161,17 @@ after reboot.
 P0 does not claim custom OTA, Secure Boot, Flash Encryption, eFuse provisioning,
 encrypted local Wi-Fi setup, arbitrary timezones, or validated RTC-alarm battery
 cycling. These require separate installation and hardware evidence.
+
+## Smart TODO extension (2026-09-06 candidate)
+
+The current candidate also owns `vibe_todo` and `vibe_llm` NVS namespaces.
+Controller intents connect the TODO page, bounded audio transcription and
+configured Chat Completions requests. Timers play local ES8311 reminder chimes.
+LLM credentials remain separate from Vibe authentication and UI snapshots.
+
+The Settings LLM portal is a temporary station-LAN server with a session QR.
+The existing SoftAP portal still owns Wi-Fi setup. NOTE4 programs NFC NDEF for
+that setup hotspot; Passport's passive tag requires a one-time phone write.
+The old P0 audio/NFC exclusions describe the baseline, not this extension.
+See [ADR 0002](adr/0002-voice-todo-and-configured-llm.md) and the
+[development handoff](smart-todo-development.zh_CN.md) for complete contracts.

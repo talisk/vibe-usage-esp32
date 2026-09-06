@@ -1,0 +1,4 @@
+# Python 3.11+; realtime-v3 implementation validated with these exact clients.
+aiohttp==3.13.3
+aiortc==1.15.0
+av==17.1.0

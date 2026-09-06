@@ -2,6 +2,7 @@
 #define ZECTRIX_BOARD_H_
 
 #include <array>
+#include <atomic>
 #include <cstdint>
 #include <memory>
 
@@ -28,6 +29,7 @@ enum class ZectrixButton : uint8_t {
 enum class ZectrixButtonAction : uint8_t {
     kClick = 0,
     kLongPress,
+    kRelease,
 };
 
 struct ZectrixButtonEvent {
@@ -51,6 +53,12 @@ public:
     bool IsButtonPressed(ZectrixButton button) const;
     bool WaitButton(ZectrixButtonEvent* event, TickType_t timeout);
     void DrainButtons();
+    // Called by the button task only after a long OK hold is released.
+    // Callback must only signal work, never perform audio/network/display I/O.
+    void SetOkReleaseCallback(void (*callback)(void*), void* context) {
+        ok_release_context_.store(context, std::memory_order_release);
+        ok_release_callback_.store(callback, std::memory_order_release);
+    }
 
     RtcPcf8563* rtc() const { return rtc_.get(); }
     i2c_master_bus_handle_t i2c_bus() const { return i2c_bus_; }
@@ -78,6 +86,8 @@ private:
     void InitBatteryAdc();
     bool ReadBattery(uint16_t* voltage_mv, uint8_t* percent);
 
+    std::atomic<void (*)(void*)> ok_release_callback_{nullptr};
+    std::atomic<void*> ok_release_context_{nullptr};
     i2c_master_bus_handle_t i2c_bus_ = nullptr;
     adc_oneshot_unit_handle_t adc_handle_ = nullptr;
     adc_cali_handle_t adc_cali_ = nullptr;

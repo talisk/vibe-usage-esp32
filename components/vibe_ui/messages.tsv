@@ -212,3 +212,56 @@ Please wait...|请稍候...|請稍候...|お待ちください...
 Scan to visit.|扫码访问。|掃碼瀏覽。|スキャンして開く。
 UP Repo|UP 仓库|UP 倉庫|UP リポジトリ
 UP Repo / DOWN X|UP 仓库 / DOWN X|UP 倉庫 / DOWN X|UP リポジトリ / DOWN X
+TODO List|待办清单|待辦清單|TODOリスト
+LLM config|大模型设置|大模型設定|LLM設定
+On|开启|開啟|有効
+Off|关闭|關閉|無効
+1. Join Wi-Fi|1. 连接 Wi-Fi|1. 連接 Wi-Fi|1. Wi-Fi接続
+2. Open setup|2. 打开设置|2. 開啟設定|2. 設定を開く
+NFC: set up tag once with phone|NFC：首次需手机写入标签|NFC：首次需手機寫入標籤|NFC：初回にタグ書込み
+NFC: tap to set up|NFC 感应配网|NFC 感應配網|NFCで接続
+NFC unavailable|NFC 不可用|NFC 無法使用|NFC使用不可
+OK next QR|OK 下一二维码|OK 下一二維碼|OK 次のQR
+OK next QR / hold back|OK 换码 / 长按返回|OK 換碼 / 長按返回|OK 次へ / 長押しで戻る
+Hold OK back|长按 OK 返回|長按 OK 返回|OK長押しで戻る
+Same Wi-Fi: scan to configure|手机连接同一 Wi-Fi 后扫码|手機連接同一 Wi-Fi 後掃碼|同じWi-FiでQRをスキャン
+Private setup / 10 min|临时设置 / 10 分钟|臨時設定 / 10 分鐘|一時設定 / 10分
+OK close|OK 关闭|OK 關閉|OK 閉じる
+Listening / release OK|正在聆听 / 松开 OK 结束|正在聆聽 / 放開 OK 結束|録音中 / OKを離して終了
+Thinking...|正在处理...|正在處理...|処理中...
+Hold OK to speak|长按 OK 说话|長按 OK 說話|OK長押しで話す
+Repeating|重复提醒|重複提醒|繰り返し
+Completed|已完成|已完成|完了
+No reminder|无提醒|無提醒|通知なし
+No tasks yet.|暂无待办事项|暫無待辦事項|タスクはありません
+No tasks yet. Hold OK, then speak.|暂无待办，长按 OK 后说话。|暫無待辦，長按 OK 後說話。|タスクなし。OK長押しで話してください。
+OK dismiss|OK 停止提醒|OK 停止提醒|OK 通知を閉じる
+Loading TODO storage failed|读取待办失败|讀取待辦失敗|TODOの読込み失敗
+Configure LLM in Settings|请先在设置中配置大模型|請先在設定中配置大模型|設定でLLMを構成してください
+Connect Wi-Fi first|请先连接 Wi-Fi|請先連接 Wi-Fi|先にWi-Fiに接続してください
+Sync clock first|请先同步时钟|請先同步時鐘|先に時刻を同期してください
+Connecting speech service|正在连接语音服务|正在連接語音服務|音声サービスに接続中
+Preparing recorder|正在准备语音|正在準備語音|音声準備中
+Listening... release OK to send|正在聆听，松开 OK 发送|正在聆聽，放開 OK 傳送|録音中、OKを離して送信
+Recognizing speech|正在识别语音|正在辨識語音|音声認識中
+Understanding task|正在理解待办|正在理解待辦|タスクを解析中
+TODO added|已添加待办|已新增待辦|TODOを追加しました
+TODO completed|已完成待办|已完成待辦|TODOを完了しました
+TODO deleted|已删除待办|已刪除待辦|TODOを削除しました
+No clear task; try again|未识别到明确操作，请重试|未辨識到明確操作，請重試|操作を特定できません。再試行
+TODO list is full|待办列表已满|待辦清單已滿|TODOリストがいっぱいです
+Could not save TODO|保存待办失败|儲存待辦失敗|TODOの保存に失敗しました
+Voice request failed|语音请求失败|語音請求失敗|音声リクエスト失敗
+Reminder|待办提醒|待辦提醒|リマインダー
+Speaker unavailable|扬声器不可用|揚聲器無法使用|スピーカー使用不可
+Reminder save failed|提醒保存失败|提醒儲存失敗|通知の保存に失敗しました
+LLM setup opened|大模型设置已打开|大模型設定已開啟|LLM設定を開きました
+LLM setup closed|大模型设置已关闭|大模型設定已關閉|LLM設定を閉じました
+LLM setup failed|大模型设置打开失败|大模型設定開啟失敗|LLM設定を開けません
+LLM setup expired|大模型设置已超时|大模型設定已逾時|LLM設定の期限切れ
+Voice cancelled|已取消语音|已取消語音|音声をキャンセルしました
+Starting setup...|正在准备设置...|正在準備設定...|設定を準備中...
+Alert sound|提示音|提示音|通知音
+Muted|静音|靜音|ミュート
+Alert volume saved|提示音量已保存|提示音量已儲存|通知音量を保存しました
+Could not save alert volume|无法保存提示音量|無法儲存提示音量|通知音量を保存できません

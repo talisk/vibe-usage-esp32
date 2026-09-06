@@ -269,6 +269,14 @@ void ZectrixBoard::ButtonTask() {
                     const ZectrixButtonEvent event = {
                         definition.button, ZectrixButtonAction::kClick};
                     xQueueSend(button_queue_, &event, 0);
+                } else {
+                    if (definition.button == ZectrixButton::kOk) {
+                        auto callback = ok_release_callback_.load(std::memory_order_acquire);
+                        if (callback) callback(ok_release_context_.load(std::memory_order_acquire));
+                    }
+                    const ZectrixButtonEvent event = {
+                        definition.button, ZectrixButtonAction::kRelease};
+                    xQueueSend(button_queue_, &event, 0);
                 }
             }
 

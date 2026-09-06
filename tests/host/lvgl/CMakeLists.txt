@@ -18,6 +18,7 @@ target_sources(test_passport_layout PRIVATE
     "${REPO_ROOT}/components/vibe_ui/generated/vibe_font_12.c"
     "${REPO_ROOT}/components/vibe_ui/generated/vibe_font_14.c"
     "${REPO_ROOT}/components/vibe_ui/generated/vibe_font_20.c"
+    "${REPO_ROOT}/components/vibe_ui/generated/vibe_todo_font_12.c"
     "${REPO_ROOT}/components/vibe_ui/generated/vibe_glyphs.c"
     "${REPO_ROOT}/components/vibe_ui/generated/vibe_messages.c"
     "${REPO_ROOT}/components/vibe_ui/vibe_i18n.c")
@@ -33,6 +34,7 @@ set(NOTE_QR "${REPO_ROOT}/firmware/zectrix/managed_components/espressif__qrcode"
 add_executable(test_note_qr test_note_qr.cc
     "${NOTE_QR}/qrcodegen.c" "${NOTE_QR}/esp_qrcode_wrapper.c"
     "${REPO_ROOT}/firmware/zectrix/components/zectrix_canvas/zectrix_canvas.cc"
+    "${REPO_ROOT}/components/vibe_ui/generated/vibe_todo_glyphs.c"
     "${REPO_ROOT}/components/vibe_ui/vibe_i18n.c"
     "${REPO_ROOT}/components/vibe_ui/generated/vibe_glyphs.c"
     "${REPO_ROOT}/components/vibe_ui/generated/vibe_messages.c")

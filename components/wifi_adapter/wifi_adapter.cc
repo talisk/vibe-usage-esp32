@@ -159,6 +159,17 @@ extern "C" const char *wifi_adapter_ap_ssid(void) { return ap_ssid; }
 
 extern "C" const char *wifi_adapter_portal_url(void) { return kPortalUrl; }
 
+extern "C" esp_err_t wifi_adapter_station_ip(char *buffer, size_t capacity) {
+    if (buffer == nullptr || capacity == 0) return ESP_ERR_INVALID_ARG;
+    buffer[0] = '\0';
+    if (!wifi_adapter_is_connected()) return ESP_ERR_INVALID_STATE;
+    const std::string ip = WifiManager::GetInstance().GetIpAddress();
+    if (ip.empty() || ip == "0.0.0.0") return ESP_ERR_INVALID_STATE;
+    if (ip.size() >= capacity) return ESP_ERR_INVALID_SIZE;
+    std::memcpy(buffer, ip.c_str(), ip.size() + 1);
+    return ESP_OK;
+}
+
 extern "C" esp_err_t wifi_adapter_remove_credential(size_t index) {
     auto &credentials = SsidManager::GetInstance().GetSsidList();
     if (index >= credentials.size()) return ESP_ERR_INVALID_ARG;

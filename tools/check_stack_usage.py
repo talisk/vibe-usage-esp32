@@ -11,6 +11,10 @@ from typing import Dict, Iterable, Tuple
 
 LIMITS = {
     "vibe_cache_decode": 256,
+    "handle_voice": 1024,
+    "smart_reminders": 512,
+    "smart_todo_transcribe": 2048,
+    "smart_todo_interpret": 1024,
     "decode_cache_into": 256,
     "fetch_today": 4096,
     "reconcile_one": 4096,

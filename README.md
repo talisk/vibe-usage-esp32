@@ -224,3 +224,13 @@ installer, and power evidence distinct.
 Project-owned code is available under the [MIT License](LICENSE). Vendored and
 managed dependencies retain their own terms; see
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+## Smart TODO development candidate
+
+Both boards now have a TODO List with hold-OK voice add/complete/delete,
+relative and recurring speaker reminders, and a Settings LLM portal for
+OpenAI-compatible Chat Completions plus audio transcription services. NOTE4
+programs NFC setup records; Passport's passive tag needs a one-time phone write.
+See the [user guide](docs/smart-todo-user-guide.zh_CN.md),
+[development handoff](docs/smart-todo-development.zh_CN.md), and
+[current acceptance record](docs/acceptance/2026-09-06-smart-todo.md).
