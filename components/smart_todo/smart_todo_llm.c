@@ -309,6 +309,16 @@ static cJSON *message(cJSON *messages, const char *role, const char *content) {
     if (!cJSON_AddStringToObject(m, "role", role) || !cJSON_AddStringToObject(m, "content", content)) return NULL;
     return m;
 }
+static bool request_localtime(time_t request_time, struct tm *local) {
+#ifdef ESP_PLATFORM
+    return localtime_r(&request_time, local) != NULL;
+#else
+    const struct tm *value = localtime(&request_time);
+    if (!value) return false;
+    *local = *value;
+    return true;
+#endif
+}
 static char *make_request(const llm_settings_t *settings, const smart_todo_list_t *list,
                           const char *text, time_t request_time) {
     static const char prompt[] =
@@ -339,7 +349,7 @@ static char *make_request(const llm_settings_t *settings, const smart_todo_list_
     if (!items || !cJSON_AddStringToObject(data, "instruction", text)) goto done;
     struct tm local = {0};
     char current_local_time[24] = {0}, utc_offset[8] = {0};
-    if ((int64_t)request_time >= SMART_TODO_TIME_MIN && localtime_r(&request_time, &local) &&
+    if ((int64_t)request_time >= SMART_TODO_TIME_MIN && request_localtime(request_time, &local) &&
         strftime(current_local_time, sizeof(current_local_time), "%Y-%m-%d %H:%M:%S", &local) > 0 &&
         strftime(utc_offset, sizeof(utc_offset), "%z", &local) > 0) {
         if (!cJSON_AddStringToObject(data, "current_local_time", current_local_time) ||
