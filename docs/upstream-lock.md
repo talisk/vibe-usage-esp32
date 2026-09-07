@@ -22,11 +22,18 @@ Most BSP and Recovery-hook files are byte-for-byte copies. Product-owned
 changes are limited to:
 
 - `bsp_button`: expose current button level through the already-owned ADC
-  button device, and use a 1500 ms long-press threshold for settings input;
+  button device, use a 1500 ms long-press threshold, and forward
+  `BUTTON_PRESS_UP` as `BSP_BTN_RELEASE` for non-blocking voice-stop signaling;
 - product `sdkconfig.defaults`: fixed 8 MB layout, USB Serial/JTAG console,
   LVGL QR/fonts and bounded memory, no PSRAM, unused Bluetooth disabled;
-- upstream audio source is retained for provenance but excluded from the P0
-  component build, so no codec or I2S dependency is linked;
+- upstream `bsp_audio.c` remains excluded from the BSP build; the product now
+  compiles `components/board_services/board_audio.cc` and links codec/I2S for
+  TODO microphone capture and reminder sounds. It preserves the upstream
+  ES8311 pin map, shared I2C ownership, `no_dac_ref=true`, 30 dB input gain, and
+  close/reopen channel workaround, with bounded 8 kHz mono capture;
+- Passport's independent passive NTAG213 has no MCU interface. Its firmware
+  NFC write API returns `ESP_ERR_NOT_SUPPORTED`; `tools/nfc-setup.py` exports
+  static open-AP WSC + URI records for one-time writing with a phone;
 - product partition CSV: preserve the upstream 24 KiB NVS, factory app,
   cardid, and permanent Recovery offsets exactly;
 - product app/UI: replace the demonstration application, without distributing
@@ -43,21 +50,61 @@ The SSD2683 driver, waveform, RTC, board drivers, optional audio/NFC source,
 and ASCII font come from the locked demo. Product-owned changes are:
 
 - board buttons emit click on release for all three keys, avoiding a click
-  before an UP/DOWN long-hold action, and expose a read-only pressed query;
+  before an UP/DOWN long-hold action, and expose a read-only pressed query.
+  A long hold emits `kRelease` on release, and long OK release also calls a
+  non-blocking callback directly from the button task so EPD rendering cannot
+  delay the controller's voice-stop flag;
 - the reusable canvas is split out of the demo UI; menu/demo business code is
   not carried into the product;
 - the canvas decodes UTF-8, measures/draws the product Latin/CJK subset at 16px em,
   preserves inverse selection rendering, and bounds centered copy to two lines;
 - the product UI owns frame comparison, full/partial policy, QR rendering,
   settings, and controller integration;
-- P0 excludes the audio and NFC implementations from the component build,
-  keeps the NFC rail low, and never probes or logs the NFC UID;
+- the original demo audio and NFC classes remain excluded. Product-owned
+  `board_services/board_audio.cc` and `board_nfc_note.cc` now compile: they reuse
+  the board's I2C handle/lock and audio/NFC pin map, without UID reads or logs.
+  NFC remains powered down outside configuration updates; stop rewrites and
+  verifies a safe URI before lowering the rail, since RF can read EEPROM with
+  the MCU supply off;
 - GPIO17 is asserted by the first statement in `app_main`, before NVS and all
   peripheral initialization, and is retained for the deep-sleep fallback;
 - the product config fixes ESP32-S3, 16 MB flash, and 8 MB octal PSRAM.
 
 The board pin map remains the source of truth: OK GPIO0, RTC interrupt GPIO5,
 power latch GPIO17, DOWN GPIO18, and UP GPIO39. NOTE4C is outside this snapshot.
+
+## Smart TODO audio and NFC dependency provenance
+
+The new product component manifest at `components/board_services/idf_component.yml`
+pins `espressif/esp_codec_dev` exactly to **1.6.2**. This matches the selected
+Passport reference BSP dependency; NOTE4's old demo used a broader `~1.5`
+range, which is not reused for the product. The managed codec is not patched.
+
+Both `firmware/ai-passport/dependencies.lock` and
+`firmware/zectrix/dependencies.lock` resolve the official
+`https://components.espressif.com/` service to version `1.6.2` with component hash:
+
+```text
+4779f31a3ba3f9b38aee1afe6ccb9ba8f6108dc3a6e77d39d7d714e9a215371b
+```
+
+The resolved archive's `.component_hash` matches both locks, and its `LICENSE`
+is Apache-2.0. This is a Component Manager archive-content hash, not a claimed
+upstream Git commit or firmware image SHA256. Keep the two lock files in sync
+when intentionally changing the manifest version, and repeat both target builds.
+
+`components/board_services/board_ndef.c` is a product-owned bounded encoder for
+WSC credentials, NFC Forum URI records and Type 2 NDEF TLVs. The NOTE4 adapter
+uses the locked demo's block size, `0x01..0x37` user range, and delayed
+STOP/read transaction shape, but adds field-arbitration failures, read-before-
+write, full stale-data clearing and readback verification. It never accesses
+the demo's UID/CC block, config, lock, or identity storage. The exact NOTE4 NFC
+chip order code is not asserted from its I2C address alone.
+
+The hardware implementation, official source links, Passport phone-write
+instructions, compatibility limits, and independent NDEF tests are documented
+in [smart-todo-hardware.md](smart-todo-hardware.md). Source and build checks do
+not establish microphone quality, reminder audibility, or phone WSC support.
 
 ## esp-wifi-connect delta
 

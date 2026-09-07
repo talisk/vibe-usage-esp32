@@ -20,6 +20,7 @@
 #include "lvgl.h"
 #include "vibe_usage.h"
 #include "passport_label.h"
+#include "passport_todo_title.h"
 #include "passport_surface.h"
 #include "vibe_product.h"
 #include "vibe_about.h"
@@ -29,8 +30,10 @@ typedef enum {
     PAGE_OVERVIEW = 0,
     PAGE_AGENTS,
     PAGE_STATUS,
+    PAGE_TODO,
     PAGE_SETTINGS,
     PAGE_ABOUT,
+    PAGE_LLM_CONFIG,
     PAGE_CONFIRM_UNLINK,
     PAGE_CONFIRM_RESET,
 } passport_page_t;
@@ -39,6 +42,8 @@ typedef enum {
     VISUAL_OVERVIEW = 0,
     VISUAL_AGENTS,
     VISUAL_STATUS,
+    VISUAL_TODO,
+    VISUAL_LLM_CONFIG,
     VISUAL_SETTINGS,
     VISUAL_ABOUT,
     VISUAL_CONFIRM_UNLINK,
@@ -64,6 +69,11 @@ typedef struct {
     uint8_t settings_index;
     vibe_about_view_t about_view;
     uint8_t agent_offset;
+    uint8_t todo_offset;
+    uint8_t wifi_qr_step;
+    bool voice_held;
+    uint32_t shown_alert_id;
+    uint32_t shown_alert_sequence;
     bool confirm_yes;
     bool force_render;
     bool dimmed;
@@ -81,7 +91,7 @@ typedef struct {
 static const char *TAG = "vibe_passport_ui";
 static const char *const SETTINGS[] = {
     "Refresh now", "Reconcile 7 days", "Wi-Fi", VIBE_ACCOUNT_NAME,
-    "Timezone", "Display", "About", "Reset Settings", "Language",
+    "Timezone", "Display", "Alert sound", "About", "Reset Settings", "Language", "LLM config",
 };
 static const uint8_t SETTINGS_COUNT = sizeof(SETTINGS) / sizeof(SETTINGS[0]);
 static passport_ui_t s_ui;
@@ -404,8 +414,9 @@ static void render_status(const app_controller_view_t *view) {
 
 static void render_settings(const app_controller_view_t *view) {
     draw_header(view, TR("SETTINGS"));
-    for (uint8_t i = 0; i < SETTINGS_COUNT; ++i) {
-        const int y = 40 + i * 27;
+    const uint8_t first = s_ui.settings_index >= 9 ? s_ui.settings_index - 8 : 0;
+    for (uint8_t i = first; i < SETTINGS_COUNT && i < first + 9; ++i) {
+        const int y = 40 + (i - first) * 27;
         const bool selected = i == s_ui.settings_index;
         lv_obj_t *row = make_card(s_ui.screen, 12, y, 216, 24,
                                   selected ? 0x162025 : 0xEFEADF);
@@ -419,8 +430,16 @@ static void render_settings(const app_controller_view_t *view) {
         } else if (i == 5) {
             snprintf(text, sizeof(text), "%s / %u%%", TR(SETTINGS[i]),
                      s_ui.brightness);
-        } else if (i == 8) {
+        } else if (i == 6) {
+            if (view->alert_volume == 0)
+                snprintf(text, sizeof(text), "%s / %s", TR(SETTINGS[i]), TR("Muted"));
+            else
+                snprintf(text, sizeof(text), "%s / %u%%", TR(SETTINGS[i]), view->alert_volume);
+        } else if (i == 9) {
             snprintf(text, sizeof(text), "%s / %s", TR(SETTINGS[i]), vibe_language_name(view->language));
+        } else if (i == 10) {
+            snprintf(text, sizeof(text), "%s / %s", TR(SETTINGS[i]),
+                     view->llm_enabled ? TR("On") : TR("Off"));
         } else {
             snprintf(text, sizeof(text), "%s", TR(SETTINGS[i]));
         }
@@ -428,7 +447,8 @@ static void render_settings(const app_controller_view_t *view) {
                    selected ? color(0xFFF9EE) : COLOR_INK,
                    LV_TEXT_ALIGN_LEFT);
     }
-    draw_footer("UP", TR(strcmp(view->detail, "Could not save language") == 0
+    draw_footer("UP", TR(strcmp(view->detail, "Could not save language") == 0 ||
+                            strcmp(view->detail, "Could not save alert volume") == 0
                             ? "Save failed" : "OK / hold back"), "DOWN");
 }
 
@@ -509,24 +529,86 @@ static void render_qr(const char *data, int x, int y, int size) {
 }
 
 static void render_wifi(const app_controller_view_t *view) {
-    make_label(s_ui.screen, TR("WI-FI SETUP"), 12, 8, 216,
-               &lv_font_montserrat_20, COLOR_INK, LV_TEXT_ALIGN_CENTER);
+    make_label(s_ui.screen, TR(s_ui.wifi_qr_step ? "2. Open setup" : "1. Join Wi-Fi"),
+               12, 8, 216, &lv_font_montserrat_20, COLOR_INK, LV_TEXT_ALIGN_CENTER);
     char payload[80];
-    snprintf(payload, sizeof(payload), "WIFI:T:nopass;S:%s;;",
-             view->ap_ssid);
-    render_qr(payload, 45, 40, 150);
-    make_label(s_ui.screen, view->ap_ssid[0] ? view->ap_ssid
-                                             : "VibePassport-XXXX",
-               12, 202, 216, &lv_font_montserrat_14, color(0xE86F3A),
+    snprintf(payload, sizeof(payload), "WIFI:T:nopass;S:%s;;", view->ap_ssid);
+    const char *url = view->portal_url[0] ? view->portal_url : "http://192.168.4.1";
+    render_qr(s_ui.wifi_qr_step ? url : payload, 30, 42, 180);
+    make_label(s_ui.screen, s_ui.wifi_qr_step ? url :
+               (view->ap_ssid[0] ? view->ap_ssid : "VibePassport-XXXX"),
+               12, 227, 216, &lv_font_montserrat_12, COLOR_INK, LV_TEXT_ALIGN_CENTER);
+    make_text_box(s_ui.screen, TR("NFC: set up tag once with phone"),
+               12, 249, 216, 32, &lv_font_montserrat_12, color(0x50616A),
                LV_TEXT_ALIGN_CENTER);
-    make_text_box(s_ui.screen, TR("Open setup AP / 10 min\nUse only while present"),
-               12, 226, 216, 32, &lv_font_montserrat_12, color(0x50616A),
-               LV_TEXT_ALIGN_CENTER);
-    make_label(s_ui.screen,
-               view->portal_url[0] ? view->portal_url : "http://192.168.4.1",
-               12, 258, 216, &lv_font_montserrat_14, COLOR_INK,
-               LV_TEXT_ALIGN_CENTER);
-    draw_footer("", TR("OK restart setup"), "");
+    draw_footer("UP", TR("OK next QR"), "DOWN");
+}
+
+static void render_llm_config(const app_controller_view_t *view) {
+    if (!view->wifi_connected || !view->llm_portal_url[0]) {
+        if (view->wifi_provisioning) {
+            render_wifi(view);
+            return;
+        }
+        draw_header(view, TR("LLM config"));
+        make_text_box(s_ui.screen, TR(view->llm_config_open ?
+                       (view->wifi_connected ? "Starting setup..." : "Connecting Wi-Fi") : "LLM config"),
+                       16, 100, 208, 48,
+                       &lv_font_montserrat_20, COLOR_INK, LV_TEXT_ALIGN_CENTER);
+        make_text_box(s_ui.screen, TR(view->todo_status), 16, 174, 208, 64,
+                       &lv_font_montserrat_12, COLOR_INK, LV_TEXT_ALIGN_CENTER);
+        draw_footer("", TR("Hold OK back"), "");
+        return;
+    }
+    make_label(s_ui.screen, TR("LLM config"), 12, 8, 216,
+               &lv_font_montserrat_20, COLOR_INK, LV_TEXT_ALIGN_CENTER);
+    render_qr(view->llm_portal_url, 25, 40, 190);
+    make_text_box(s_ui.screen, TR("Same Wi-Fi: scan to configure"), 12, 236, 216, 32,
+                   &lv_font_montserrat_12, COLOR_INK, LV_TEXT_ALIGN_CENTER);
+    make_label(s_ui.screen, TR("Private setup / 10 min"), 12, 274, 216,
+               &lv_font_montserrat_12, color(0x50616A), LV_TEXT_ALIGN_CENTER);
+    draw_footer("", TR("OK close"), "");
+}
+
+static void render_todo(const app_controller_view_t *view) {
+    draw_header(view, TR("TODO List"));
+    const char *status = view->todo_recording ? "Listening / release OK" :
+                         view->todo_busy && view->todo_status[0] ? view->todo_status :
+                         view->todo_status[0] ? view->todo_status : "Hold OK to speak";
+    make_label(s_ui.screen, TR(status), 14, 39, 212, &lv_font_montserrat_12,
+               color(0x7C3E25), LV_TEXT_ALIGN_LEFT);
+    s_ui.todo_offset = vibe_list_clamp(s_ui.todo_offset, view->todo_count, 3);
+    for (uint8_t row = 0; row < 3 && s_ui.todo_offset + row < view->todo_count; ++row) {
+        const app_todo_item_view_t *item = &view->todos[s_ui.todo_offset + row];
+        const int y = 64 + row * 65;
+        lv_obj_t *card = make_card(s_ui.screen, 12, y, 216, 60,
+                                   item->id == view->todo_alert_id ? 0xF4CBB7 : 0xEFEADF);
+        char marker[24];
+        snprintf(marker, sizeof(marker), "%s %lu", item->completed ? "[x]" : "[ ]",
+                 (unsigned long)item->id);
+        make_label(card, marker, 6, 4, 45, &lv_font_montserrat_12,
+                   color(0x7C3E25), LV_TEXT_ALIGN_LEFT);
+        passport_todo_title_create(card, item->title, COLOR_INK);
+        char due[24], reminder[80];
+        if (item->due_utc > 0) {
+            format_time(item->due_utc, view->timezone, due, sizeof(due));
+            if (item->repeat_seconds)
+                snprintf(reminder, sizeof(reminder), "%s / %s", due, TR("Repeating"));
+            else snprintf(reminder, sizeof(reminder), "%s", due);
+        } else snprintf(reminder, sizeof(reminder), "%s", TR(item->completed ? "Completed" : "No reminder"));
+        make_label(card, reminder, 6, 39, 204, &lv_font_montserrat_12,
+                   color(0x50616A), LV_TEXT_ALIGN_LEFT);
+    }
+    if (!view->todo_count)
+        make_text_box(s_ui.screen, TR("No tasks yet. Hold OK, then speak."), 20, 115,
+                       200, 72, &lv_font_montserrat_14, COLOR_INK, LV_TEXT_ALIGN_CENTER);
+    char count[40];
+    snprintf(count, sizeof(count), "%u-%u / %u", view->todo_count ? s_ui.todo_offset + 1 : 0,
+             (unsigned)(s_ui.todo_offset + 3 < view->todo_count ? s_ui.todo_offset + 3 : view->todo_count),
+             view->todo_count);
+    make_label(s_ui.screen, count, 12, 265, 216, &lv_font_montserrat_12,
+               color(0x50616A), LV_TEXT_ALIGN_CENTER);
+    draw_footer("UP", TR(view->todo_alert_id ? "OK dismiss" : "OK back"), "DOWN");
 }
 
 static void render_link(const app_controller_view_t *view) {
@@ -610,6 +692,8 @@ static void render_error(const app_controller_view_t *view) {
 
 static passport_visual_t resolve_visual(const app_controller_view_t *view) {
     switch (s_ui.page) {
+        case PAGE_TODO: return VISUAL_TODO;
+        case PAGE_LLM_CONFIG: return VISUAL_LLM_CONFIG;
         case PAGE_SETTINGS: return VISUAL_SETTINGS;
         case PAGE_ABOUT: return VISUAL_ABOUT;
         case PAGE_CONFIRM_UNLINK: return VISUAL_CONFIRM_UNLINK;
@@ -649,10 +733,10 @@ static passport_visual_t resolve_visual(const app_controller_view_t *view) {
     }
 }
 
-static void render(const app_controller_view_t *view) {
+static bool render(const app_controller_view_t *view) {
     if (!bsp_lvgl_lock(1000)) {
         ESP_LOGW(TAG, "LVGL lock timed out");
-        return;
+        return false;
     }
     lv_obj_clean(s_ui.screen);
     s_language = view->language;
@@ -663,6 +747,8 @@ static void render(const app_controller_view_t *view) {
         case VISUAL_OVERVIEW: render_overview(view); break;
         case VISUAL_AGENTS: render_agents(view); break;
         case VISUAL_STATUS: render_status(view); break;
+        case VISUAL_TODO: render_todo(view); break;
+        case VISUAL_LLM_CONFIG: render_llm_config(view); break;
         case VISUAL_SETTINGS: render_settings(view); break;
         case VISUAL_ABOUT: render_about(); break;
         case VISUAL_CONFIRM_UNLINK:
@@ -680,6 +766,7 @@ static void render(const app_controller_view_t *view) {
         case VISUAL_ERROR: render_error(view); break;
     }
     bsp_lvgl_unlock();
+    return true;
 }
 
 static uint32_t hash_bytes(uint32_t hash, const void *data, size_t size) {
@@ -697,6 +784,7 @@ static uint32_t render_hash(const app_controller_view_t *view) {
     uint32_t hash = 2166136261U;
     HASH_FIELD(lifecycle);
     HASH_FIELD(language);
+    HASH_FIELD(alert_volume);
     HASH_FIELD(data_state);
     HASH_FIELD(reason);
     HASH_FIELD(busy);
@@ -727,6 +815,16 @@ static uint32_t render_hash(const app_controller_view_t *view) {
     HASH_FIELD(user_code);
     HASH_FIELD(verification_uri);
     HASH_FIELD(detail);
+    HASH_FIELD(llm_config_open);
+    HASH_FIELD(llm_enabled);
+    HASH_FIELD(llm_portal_url);
+    HASH_FIELD(todo_status);
+    HASH_FIELD(todo_recording);
+    HASH_FIELD(todo_busy);
+    HASH_FIELD(todo_revision);
+    HASH_FIELD(todo_count);
+    HASH_FIELD(todo_alert_id);
+    HASH_FIELD(todo_alert_sequence);
     HASH_FIELD(today);
     HASH_FIELD(seven_day);
 #undef HASH_FIELD
@@ -735,6 +833,8 @@ static uint32_t render_hash(const app_controller_view_t *view) {
     hash = hash_bytes(hash, &s_ui.settings_index, sizeof(s_ui.settings_index));
     hash = hash_bytes(hash, &s_ui.about_view, sizeof(s_ui.about_view));
     hash = hash_bytes(hash, &s_ui.agent_offset, sizeof(s_ui.agent_offset));
+    hash = hash_bytes(hash, &s_ui.todo_offset, sizeof(s_ui.todo_offset));
+    hash = hash_bytes(hash, &s_ui.wifi_qr_step, sizeof(s_ui.wifi_qr_step));
     hash = hash_bytes(hash, &s_ui.confirm_yes, sizeof(s_ui.confirm_yes));
     hash = hash_bytes(hash, &s_ui.brightness, sizeof(s_ui.brightness));
     hash = hash_bytes(hash, &s_ui.battery_soc, sizeof(s_ui.battery_soc));
@@ -753,6 +853,8 @@ static void button_changed(bsp_btn_t button, bsp_btn_ev_t event,
                            void *context) {
     passport_ui_t *ui = context;
     if (ui == NULL || ui->events == NULL) return;
+    /* A release must stop capture even while LVGL is busy drawing. */
+    if (button == BSP_BTN_OK && event == BSP_BTN_RELEASE) app_controller_voice_stop();
     const passport_button_event_t queued = {
         .button = button,
         .event = event,
@@ -772,6 +874,7 @@ static void dispatch_settings(const app_controller_view_t *view) {
             s_ui.page = PAGE_OVERVIEW;
             break;
         case 2:
+            s_ui.wifi_qr_step = 0;
             app_controller_dispatch(APP_INTENT_RECONFIGURE_WIFI);
             s_ui.page = PAGE_OVERVIEW;
             break;
@@ -794,15 +897,23 @@ static void dispatch_settings(const app_controller_view_t *view) {
             s_ui.dimmed = false;
             break;
         case 6:
+            app_controller_dispatch(APP_INTENT_CYCLE_ALERT_VOLUME);
+            break;
+        case 7:
             s_ui.about_view = VIBE_ABOUT_DETAILS;
             s_ui.page = PAGE_ABOUT;
             break;
-        case 7:
+        case 8:
             s_ui.confirm_yes = false;
             s_ui.page = PAGE_CONFIRM_RESET;
             break;
-        case 8:
+        case 9:
             app_controller_dispatch(APP_INTENT_CYCLE_LANGUAGE);
+            break;
+        case 10:
+            s_ui.page = PAGE_LLM_CONFIG;
+            s_ui.wifi_qr_step = 0;
+            app_controller_dispatch(APP_INTENT_LLM_CONFIG);
             break;
         default:
             break;
@@ -811,7 +922,26 @@ static void dispatch_settings(const app_controller_view_t *view) {
 
 static void handle_business_button(const passport_button_event_t *event,
                                    const app_controller_view_t *view) {
+    if (event->event == BSP_BTN_RELEASE) {
+        if (event->button == BSP_BTN_OK && s_ui.voice_held) {
+            s_ui.voice_held = false;
+            app_controller_voice_stop();
+        }
+        return;
+    }
     if (event->event == BSP_BTN_LONG) {
+        if (event->button == BSP_BTN_OK && s_ui.page == PAGE_TODO) {
+            if (!view->todo_busy && !view->todo_recording && bsp_button_is_pressed(BSP_BTN_OK)) {
+                s_ui.voice_held = true;
+                app_controller_dispatch(APP_INTENT_TODO_VOICE_START);
+            }
+            return;
+        }
+        if (event->button == BSP_BTN_OK && s_ui.page == PAGE_LLM_CONFIG) {
+            app_controller_dispatch(APP_INTENT_LLM_CONFIG_CLOSE);
+            s_ui.page = PAGE_SETTINGS;
+            return;
+        }
         if (event->button == BSP_BTN_OK) {
             s_ui.page = s_ui.page == PAGE_SETTINGS ? PAGE_OVERVIEW
                                                    : PAGE_SETTINGS;
@@ -820,7 +950,30 @@ static void handle_business_button(const passport_button_event_t *event,
         }
         return;
     }
-    if (event->event != BSP_BTN_CLICK) return;
+    if (event->event != BSP_BTN_CLICK || s_ui.voice_held) return;
+    if (s_ui.page == PAGE_TODO) {
+        if (view->todo_busy || view->todo_recording) return;
+        if (event->button == BSP_BTN_OK) {
+            if (view->todo_alert_id) app_controller_dispatch(APP_INTENT_TODO_ACK);
+            else s_ui.page = PAGE_OVERVIEW;
+        } else if (!vibe_list_step(&s_ui.todo_offset, view->todo_count, 3,
+                                   event->button == BSP_BTN_DOWN)) {
+            s_ui.page = event->button == BSP_BTN_UP ? PAGE_STATUS : PAGE_OVERVIEW;
+            s_ui.todo_offset = 0;
+        }
+        s_ui.force_render = true;
+        return;
+    }
+    if (s_ui.page == PAGE_LLM_CONFIG) {
+        if (view->wifi_provisioning && !view->wifi_connected) {
+            s_ui.wifi_qr_step = !s_ui.wifi_qr_step;
+        } else if (event->button == BSP_BTN_OK) {
+            app_controller_dispatch(APP_INTENT_LLM_CONFIG_CLOSE);
+            s_ui.page = PAGE_SETTINGS;
+        }
+        s_ui.force_render = true;
+        return;
+    }
 
     if (s_ui.page == PAGE_CONFIRM_UNLINK ||
         s_ui.page == PAGE_CONFIRM_RESET) {
@@ -870,14 +1023,17 @@ static void handle_business_button(const passport_button_event_t *event,
         visual == VISUAL_TIME || visual == VISUAL_ERROR) {
         if (event->button == BSP_BTN_OK) {
             if (visual == VISUAL_WIFI) {
-                app_controller_dispatch(view->wifi_provisioning
-                                            ? APP_INTENT_RECONFIGURE_WIFI
-                                            : APP_INTENT_START_WIFI);
+                if (view->wifi_provisioning) s_ui.wifi_qr_step = !s_ui.wifi_qr_step;
+                else app_controller_dispatch(APP_INTENT_START_WIFI);
+                s_ui.force_render = true;
             } else if (visual == VISUAL_LINK) {
                 app_controller_dispatch(APP_INTENT_RELINK);
             } else {
                 app_controller_dispatch(APP_INTENT_REFRESH);
             }
+        } else {
+            s_ui.page = PAGE_TODO;
+            s_ui.force_render = true;
         }
         return;
     }
@@ -901,8 +1057,8 @@ static void handle_business_button(const passport_button_event_t *event,
     } else {
         int page = (int)s_ui.page;
         page += event->button == BSP_BTN_UP ? -1 : 1;
-        if (page < PAGE_OVERVIEW) page = PAGE_STATUS;
-        if (page > PAGE_STATUS) page = PAGE_OVERVIEW;
+        if (page < PAGE_OVERVIEW) page = PAGE_TODO;
+        if (page > PAGE_TODO) page = PAGE_OVERVIEW;
         s_ui.page = (passport_page_t)page;
         s_ui.agent_offset = 0;
     }
@@ -936,6 +1092,21 @@ static void ui_task(void *argument) {
     while (true) {
         app_controller_view_t *view = &ui->view;
         app_controller_get_view(view);
+        /* A full UI queue must not strand the local hold latch after release. */
+        if (ui->voice_held && !bsp_button_is_pressed(BSP_BTN_OK)) ui->voice_held = false;
+        if (view->todo_alert_id && (view->todo_alert_id != ui->shown_alert_id ||
+                                    view->todo_alert_sequence != ui->shown_alert_sequence)) {
+            ui->shown_alert_id = view->todo_alert_id;
+            ui->shown_alert_sequence = view->todo_alert_sequence;
+            ui->page = PAGE_TODO;
+            ui->todo_offset = 0;
+            for (uint8_t i = 0; i < view->todo_count; ++i)
+                if (view->todos[i].id == view->todo_alert_id) ui->todo_offset = i;
+            bsp_display_backlight(ui->brightness);
+            ui->dimmed = false;
+            ui->last_activity_us = esp_timer_get_time();
+            ui->force_render = true;
+        } else if (!view->todo_alert_id) ui->shown_alert_id = 0;
         passport_button_event_t event;
         while (xQueueReceive(ui->events, &event, 0) == pdTRUE) {
             handle_button(&event, view);
@@ -959,9 +1130,10 @@ static void ui_task(void *argument) {
 
         const uint32_t hash = render_hash(view);
         if (ui->force_render || hash != ui->rendered_hash) {
-            render(view);
-            ui->rendered_hash = hash;
-            ui->force_render = false;
+            if (render(view)) {
+                ui->rendered_hash = hash;
+                ui->force_render = false;
+            }
         }
         ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(100));
     }

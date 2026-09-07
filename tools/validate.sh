@@ -11,6 +11,11 @@ usage() {
 run_static() {
     python3 "${repo_root}/tools/check_repo.py"
     "${repo_root}/tools/test-host.sh"
+    "${repo_root}/tools/test-smart-todo.sh"
+    "${repo_root}/tools/test-smart-llm.sh"
+    "${repo_root}/tools/test-app-smart.sh"
+    "${repo_root}/components/llm_portal/tests/run.sh"
+    python3 "${repo_root}/components/board_services/tests/test_ndef.py"
     python3 -m unittest discover -s "${repo_root}/tests" \
         -p "test_verify_firmware.py"
     python3 -m unittest discover -s "${repo_root}/tests" \

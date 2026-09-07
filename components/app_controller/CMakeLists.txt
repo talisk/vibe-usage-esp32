@@ -2,6 +2,9 @@ idf_component_register(
     SRCS "app_controller.c"
     INCLUDE_DIRS "include"
     REQUIRES
+        smart_todo
+        llm_portal
+        board_services
         device_config
         vibe_usage
         wifi_adapter

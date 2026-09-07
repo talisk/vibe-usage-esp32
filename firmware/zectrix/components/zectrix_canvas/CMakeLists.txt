@@ -1,5 +1,6 @@
 idf_component_register(
     SRCS "zectrix_canvas.cc"
+         "../../../../components/vibe_ui/generated/vibe_todo_glyphs.c"
     INCLUDE_DIRS "include" "font"
     REQUIRES zectrix_epd vibe_ui
 )

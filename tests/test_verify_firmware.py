@@ -28,6 +28,7 @@ def sample_table(passport: bool = True) -> bytes:
         (1, 2, 0x9000, 0x6000, "nvs"),
         (1, 1, 0xF000, 0x1000, "phy_init"),
         (0, 0, 0x10000, 0x300000, "factory"),
+        (1, 0x40, 0x310000, 0x20000, "voicebuf"),
     ]
     if passport:
         entries.extend(

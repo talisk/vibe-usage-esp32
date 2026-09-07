@@ -779,7 +779,9 @@ static void test_epd_refresh_policy(void) {
 }
 
 int main(int argc, char **argv) {
-    for (uint8_t visible = 6; visible <= 8; visible += 2) {
+    const uint8_t list_sizes[] = {3, 4, 6, 8}; /* TODO and Agents, both boards. */
+    for (unsigned size = 0; size < sizeof(list_sizes) / sizeof(list_sizes[0]); ++size) {
+        const uint8_t visible = list_sizes[size];
         for (uint8_t count = 0; count <= VIBE_MAX_AGENTS; ++count) {
             uint8_t offset = 0;
             const uint8_t limit = count > visible ? count - visible : 0;
@@ -793,7 +795,7 @@ int main(int argc, char **argv) {
                 assert(offset == i - 1);
             }
             assert(!vibe_list_step(&offset, count, visible, false));
-            assert(vibe_list_clamp(11, count, visible) == limit);
+            assert(vibe_list_clamp(UINT8_MAX, count, visible) == limit);
         }
     }
     test_dates();

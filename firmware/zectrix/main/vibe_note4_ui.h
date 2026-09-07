@@ -21,8 +21,10 @@ private:
         kOverview = 0,
         kAgents,
         kStatus,
+        kTodo,
         kSettings,
         kAbout,
+        kLlmConfig,
         kConfirmUnlink,
         kConfirmReset,
     };
@@ -31,8 +33,10 @@ private:
         kOverview = 0,
         kAgents,
         kStatus,
+        kTodo,
         kSettings,
         kAbout,
+        kLlmConfig,
         kConfirmUnlink,
         kConfirmReset,
         kWifi,
@@ -44,6 +48,7 @@ private:
         kAboutQr,
     };
 
+    static void OkReleased(void* context);
     static void TimeSynchronized(int64_t utc_seconds, void* context);
     static void DrawQrCallback(esp_qrcode_handle_t qrcode, void* context);
 
@@ -57,11 +62,13 @@ private:
     void Shutdown();
 
     Visual ResolveVisual(const app_controller_view_t& view) const;
-    void Render(const app_controller_view_t& view, bool force_full = false);
+    bool Render(const app_controller_view_t& view, bool force_full = false);
     void RenderHeader(const app_controller_view_t& view, const char* title);
     void RenderOverview(const app_controller_view_t& view);
     void RenderAgents(const app_controller_view_t& view);
     void RenderStatus(const app_controller_view_t& view);
+    void RenderTodo(const app_controller_view_t& view);
+    void RenderLlmConfig(const app_controller_view_t& view);
     void RenderSettings(const app_controller_view_t& view);
     void RenderAbout();
     void RenderConfirmation(const char* title, const char* detail);
@@ -88,6 +95,11 @@ private:
     uint8_t settings_index_ = 0;
     vibe_about_view_t about_view_ = VIBE_ABOUT_DETAILS;
     uint8_t agent_offset_ = 0;
+    uint8_t todo_offset_ = 0;
+    uint8_t wifi_qr_step_ = 0;
+    bool voice_held_ = false;
+    uint32_t shown_alert_id_ = 0;
+    uint32_t shown_alert_sequence_ = 0;
     uint32_t rendered_revision_ = UINT32_MAX;
     int64_t next_power_sample_utc_ = 0;
     ZectrixPowerSnapshot power_ = {};

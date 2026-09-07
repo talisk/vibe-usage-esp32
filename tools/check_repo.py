@@ -223,6 +223,7 @@ def check_partitions(errors: List[str]) -> None:
         ("nvs", "data", "nvs", 0x9000, 0x6000),
         ("phy_init", "data", "phy", 0xF000, 0x1000),
         ("factory", "app", "factory", 0x10000, 0x300000),
+        ("voicebuf", "data", "0x40", 0x310000, 0x20000),
     ]
     expected_passport = expected_common + [
         ("cardid", "data", "nvs", 0x356000, 0x4000),

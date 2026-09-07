@@ -50,6 +50,8 @@ bool wifi_adapter_is_connected(void);
 bool wifi_adapter_is_provisioning(void);
 const char *wifi_adapter_ap_ssid(void);
 const char *wifi_adapter_portal_url(void);
+/* Copies the active station IPv4 address; never returns the setup AP address. */
+esp_err_t wifi_adapter_station_ip(char *buffer, size_t capacity);
 esp_err_t wifi_adapter_remove_credential(size_t index);
 esp_err_t wifi_adapter_clear_credentials(void);
 

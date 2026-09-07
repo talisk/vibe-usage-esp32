@@ -5,6 +5,7 @@
 #include <cstring>
 
 #include "vibe_i18n.h"
+#include "vibe_todo_font.h"
 
 void ZectrixCanvas::Clear(bool white) {
     pixels_.fill(white ? 0xff : 0x00);
@@ -76,9 +77,10 @@ void ZectrixCanvas::Text(int x, int y, const char* text, int scale,
     while (*cursor) {
         uint32_t code = vibe_utf8_next(&cursor);
         int glyph_index = vibe_glyph_index(code);
-        if (glyph_index < 0) glyph_index = vibe_glyph_index('?');
-        const uint32_t* glyph = vibe_glyph_rows[glyph_index];
-        const int glyph_width = vibe_glyph_advances[glyph_index];
+        const int todo_index = glyph_index < 0 ? vibe_todo_glyph_index(code) : -1;
+        if (glyph_index < 0 && todo_index < 0) glyph_index = vibe_glyph_index('?');
+        const uint32_t* glyph = todo_index >= 0 ? vibe_todo_glyph_rows[todo_index] : vibe_glyph_rows[glyph_index];
+        const int glyph_width = todo_index >= 0 ? vibe_todo_glyph_advances[todo_index] : vibe_glyph_advances[glyph_index];
         if (inverted) {
             FillRect(cursor_x, y, glyph_width * scale, VIBE_NOTE_GLYPH_HEIGHT * scale, true);
         }
@@ -134,8 +136,9 @@ int ZectrixCanvas::TextWidth(const char* text, int scale) const {
     while (*cursor) {
         uint32_t code = vibe_utf8_next(&cursor);
         int index = vibe_glyph_index(code);
-        if (index < 0) index = vibe_glyph_index('?');
-        width += vibe_glyph_advances[index] * scale;
+        const int todo_index = index < 0 ? vibe_todo_glyph_index(code) : -1;
+        if (index < 0 && todo_index < 0) index = vibe_glyph_index('?');
+        width += (todo_index >= 0 ? vibe_todo_glyph_advances[todo_index] : vibe_glyph_advances[index]) * scale;
     }
     return width;
 }

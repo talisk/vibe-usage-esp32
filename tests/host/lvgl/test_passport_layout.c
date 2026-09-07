@@ -4,6 +4,7 @@
 #include <string.h>
 #include "passport_label.h"
 #include "passport_surface.h"
+#include "passport_todo_title.h"
 #include "vibe_product.h"
 #include "vibe_i18n.h"
 
@@ -78,6 +79,43 @@ int main(void) {
     lv_display_set_buffers(display, pixels, NULL, sizeof(pixels), LV_DISPLAY_RENDER_MODE_FULL);
     lv_display_set_flush_cb(display, flush);
     lv_obj_t *screen = lv_screen_active();
+    /* Production TODO labels retain UTF-8 and clip a full 96-byte title in-row. */
+    const char *task_titles[] = {"两小时后提醒我浇花", "毎週金曜日に薬を飲む", "記得繳電費",
+        "A very long task title which should stay within the compact TODO card and never reach the footer."};
+    for (unsigned t = 0; t < sizeof(task_titles) / sizeof(task_titles[0]); ++t) {
+        const char *cursor = task_titles[t];
+        while (*cursor) {
+            const uint32_t cp = vibe_utf8_next(&cursor);
+            lv_font_glyph_dsc_t dsc = {0};
+            assert(lv_font_get_glyph_dsc(&vibe_todo_font_12, &dsc, cp, 0));
+            assert(!dsc.is_placeholder && dsc.resolved_font == &vibe_todo_font_12);
+            assert(dsc.box_h <= 16 && dsc.ofs_y == -4);
+        }
+        lv_obj_t *card = lv_obj_create(screen);
+        lv_obj_remove_style_all(card);
+        lv_obj_set_pos(card, 12, 64);
+        lv_obj_set_size(card, 216, 60);
+        lv_obj_t *label = passport_todo_title_create(card, task_titles[t], lv_color_black());
+        lv_obj_update_layout(screen);
+        assert(lv_obj_get_width(label) == 158 && lv_obj_get_height(label) == 33);
+        assert(lv_obj_get_x(label) + lv_obj_get_width(label) <= lv_obj_get_width(card));
+        assert(lv_obj_get_y(label) + lv_obj_get_height(label) < 39); /* reminder row */
+        lv_refr_now(display);
+        lv_obj_delete(card);
+    }
+    const char *todo_labels[] = {"TODO List", "LLM config", "OK dismiss", "OK back", "OK next QR"};
+    for (int lang = 0; lang < VIBE_LANG_COUNT; ++lang)
+        for (unsigned t = 0; t < sizeof(todo_labels) / sizeof(todo_labels[0]); ++t)
+            fits(vibe_tr((vibe_language_t)lang, todo_labels[t]), t < 2 ? 140 : 128, &vibe_font_12);
+    char llm_url[128] = "http://192.168.100.100/?token=";
+    const size_t prefix = strlen(llm_url);
+    memset(llm_url + prefix, 'a', sizeof(llm_url) - prefix - 1);
+    lv_obj_t *llm_qr = lv_qrcode_create(screen);
+    lv_qrcode_set_size(llm_qr, 190);
+    lv_qrcode_set_quiet_zone(llm_qr, true);
+    assert(lv_qrcode_update(llm_qr, llm_url, strlen(llm_url)) == LV_RESULT_OK);
+    lv_refr_now(display);
+    lv_obj_delete(llm_qr);
     const char *values[] = {"10.7M", "999K", "18.4E", "0"};
     for (unsigned i = 0; i < sizeof(values) / sizeof(values[0]); ++i)
         fits(values[i], 48, &lv_font_montserrat_12);
@@ -98,10 +136,11 @@ int main(void) {
     fits(VIBE_AUTHOR_URL, 208, &lv_font_montserrat_12);
     fits(VIBE_ACCOUNT_NAME, 200, &lv_font_montserrat_12);
     const char *compact[] = {"Refresh now", "Reconcile 7 days", "Wi-Fi setup", "Timezone", "Display",
+        "Alert sound", "Muted", "Alert volume saved", "Could not save alert volume",
         "About", "Reset Settings", "Language", "OK Today / 7D", "OK / hold back"};
     for (int lang = 0; lang < VIBE_LANG_COUNT; ++lang) {
         for (unsigned i = 0; i < sizeof(compact)/sizeof(compact[0]); ++i)
-            fits(vibe_tr((vibe_language_t)lang, compact[i]), i >= 8 ? 128 : 200, &vibe_font_12);
+            fits(vibe_tr((vibe_language_t)lang, compact[i]), i >= 12 ? 128 : 200, &vibe_font_12);
         fits(vibe_language_name((vibe_language_t)lang), 128, &vibe_font_12);
         fits(vibe_tr((vibe_language_t)lang, "UP Repo / DOWN X"), 208, &vibe_font_12);
         fits(vibe_tr((vibe_language_t)lang, "Scan to visit."), 208, &vibe_font_14);

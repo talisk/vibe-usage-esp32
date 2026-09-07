@@ -3,6 +3,7 @@ idf_component_register(
         "../../../components/vibe_ui/generated/vibe_font_12.c"
         "../../../components/vibe_ui/generated/vibe_font_14.c"
         "../../../components/vibe_ui/generated/vibe_font_20.c"
+        "../../../components/vibe_ui/generated/vibe_todo_font_12.c"
     INCLUDE_DIRS "."
     REQUIRES
         app_controller

@@ -133,6 +133,9 @@ def verify_partition_contract(
     )
     _require_partition(by_label, Partition(1, 2, 0x9000, 0x6000, "nvs"))
     _require_partition(by_label, Partition(1, 1, 0xF000, 0x1000, "phy_init"))
+    _require_partition(
+        by_label, Partition(1, 0x40, 0x310000, 0x20000, "voicebuf")
+    )
     if spec.protected:
         _require_partition(
             by_label,
@@ -142,7 +145,7 @@ def verify_partition_contract(
             by_label,
             Partition(0, 0x20, RECOVERY_OFFSET, RECOVERY_SIZE, "recovery"),
         )
-    elif set(by_label) != {"nvs", "phy_init", "factory"}:
+    elif set(by_label) != {"nvs", "phy_init", "factory", "voicebuf"}:
         raise ValueError("NOTE4 partition table contains an unexpected partition")
 
     ordered = sorted(partitions, key=lambda item: item.offset)

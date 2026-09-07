@@ -13,6 +13,21 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  codex-gateway:
+    name: Codex gateway host tests
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check out source
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+      - name: Install isolated gateway test dependencies
+        run: |
+          python3.12 -m venv "${RUNNER_TEMP}/vibe-gateway-test-venv"
+          "${RUNNER_TEMP}/vibe-gateway-test-venv/bin/python" -m pip install -r services/codex_gateway/requirements.txt
+      - name: Test gateway without login or model calls
+        env:
+          VIBE_GATEWAY_PYTHON: ${{ runner.temp }}/vibe-gateway-test-venv/bin/python
+        run: ./tools/test-codex-gateway.sh
+
   static:
     name: Host and repository checks
     runs-on: ubuntu-24.04
